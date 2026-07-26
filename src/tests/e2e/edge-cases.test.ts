@@ -165,8 +165,8 @@ describe('Edge Cases', () => {
       const expectedFiles = [
         'package.json',
         'tsconfig.json',
-        'source/app.tsx',
-        'source/cli.tsx',
+        'src/app.tsx',
+        'src/cli.tsx',
         'test.tsx',
       ];
 
@@ -177,11 +177,11 @@ describe('Edge Cases', () => {
     });
 
     it('should handle forward slashes in template paths', () => {
-      // Templates use forward slashes (e.g., source/app.tsx.template)
+      // Templates use forward slashes (e.g., src/app.tsx.template)
       // The template engine should handle this correctly on all platforms
       const result = scaffoldProject(createState({ projectName: 'test-app' }));
       expect(result.ok).toBe(true);
-      expect(fs.existsSync(path.join(tempDir, 'test-app', 'source', 'app.tsx'))).toBe(true);
+      expect(fs.existsSync(path.join(tempDir, 'test-app', 'src', 'app.tsx'))).toBe(true);
     });
   });
 

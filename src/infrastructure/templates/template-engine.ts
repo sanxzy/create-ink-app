@@ -52,7 +52,7 @@ export const makeTemplateEngine = (fs: FileSystemPort): TemplateEnginePort => {
 
   /**
    * Get the output filename by stripping the .template suffix.
-   * e.g., "source/app.tsx.template" → "source/app.tsx"
+   * e.g., "src/app.tsx.template" → "src/app.tsx"
    */
   const getOutputFilename = (templateFilename: string): string => {
     if (templateFilename.endsWith('.template')) {
@@ -64,8 +64,8 @@ export const makeTemplateEngine = (fs: FileSystemPort): TemplateEnginePort => {
   /**
    * Load a template file, process it, and return the result.
    * `relativePath` is the template path relative to the runtime/language dir
-   * (e.g., "source/app.tsx.template") and is used to compute the output filename
-   * preserving the directory structure (e.g., "source/app.tsx").
+   * (e.g., "src/app.tsx.template") and is used to compute the output filename
+   * preserving the directory structure (e.g., "src/app.tsx").
    */
   const processTemplateFile = (
     templatePath: string,

@@ -114,8 +114,8 @@ describe('Scaffold Engine Integration', () => {
       'readme.md',
       'LICENSE',
       'vitest.config.ts',
-      'source/app.tsx',
-      'source/cli.tsx',
+      'src/app.tsx',
+      'src/cli.tsx',
       'test.tsx',
     ];
 
@@ -184,7 +184,7 @@ describe('Scaffold Engine Integration', () => {
 
     expect(tsconfig.compilerOptions.target).toBe('ES2022');
     expect(tsconfig.compilerOptions.jsx).toBe('react-jsx');
-    expect(tsconfig.include).toContain('source/**/*.tsx');
+    expect(tsconfig.include).toContain('src/**/*.tsx');
   });
 
   it('should generate a valid biome.json', () => {
@@ -275,7 +275,7 @@ describe('Scaffold Engine Integration', () => {
     expect(result.ok).toBe(true);
 
     // Template files should exist and have project name substituted
-    const appPath = path.join(tempDir, 'my-app', 'source', 'app.tsx');
+    const appPath = path.join(tempDir, 'my-app', 'src', 'app.tsx');
     const appContent = fs.readFileSync(appPath, 'utf-8');
 
     expect(appContent).toContain('my-app');
@@ -299,7 +299,7 @@ describe('Scaffold Engine Integration', () => {
 
     expect(result.ok).toBe(true);
 
-    const cliPath = path.join(tempDir, 'my-app', 'source', 'cli.tsx');
+    const cliPath = path.join(tempDir, 'my-app', 'src', 'cli.tsx');
     const cliContent = fs.readFileSync(cliPath, 'utf-8');
 
     expect(cliContent).toContain('#!/usr/bin/env node');
@@ -382,8 +382,8 @@ describe('Scaffold Engine Integration', () => {
     expect(result.ok).toBe(true);
 
     // JS project should have .jsx files
-    expect(pathExists(path.join(tempDir, 'js-project', 'source', 'app.jsx'))).toBe(true);
-    expect(pathExists(path.join(tempDir, 'js-project', 'source', 'cli.jsx'))).toBe(true);
+    expect(pathExists(path.join(tempDir, 'js-project', 'src', 'app.jsx'))).toBe(true);
+    expect(pathExists(path.join(tempDir, 'js-project', 'src', 'cli.jsx'))).toBe(true);
     expect(pathExists(path.join(tempDir, 'js-project', 'test.jsx'))).toBe(true);
   });
 
@@ -608,7 +608,7 @@ describe('Scaffold Engine Integration', () => {
       // Should list all files that would be created
       expect(result.value.files.length).toBeGreaterThan(0);
       expect(result.value.files).toContain('dry-run-test/package.json');
-      expect(result.value.files).toContain('dry-run-test/source/app.tsx');
+      expect(result.value.files).toContain('dry-run-test/src/app.tsx');
     }
   });
 

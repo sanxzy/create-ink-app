@@ -58,7 +58,7 @@ describe('TemplateEngine', () => {
     });
 
     it('should handle path with template suffix', () => {
-      expect(engine.getOutputFilename('source/app.tsx.template')).toBe('source/app.tsx');
+      expect(engine.getOutputFilename('src/app.tsx.template')).toBe('src/app.tsx');
     });
 
     it('should return unchanged if no .template suffix', () => {

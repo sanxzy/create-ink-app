@@ -157,8 +157,8 @@ describe('config generators', () => {
     });
 
     it('should include source directory', () => {
-      expect(tsconfig.include).toContain('source/**/*.ts');
-      expect(tsconfig.include).toContain('source/**/*.tsx');
+      expect(tsconfig.include).toContain('src/**/*.ts');
+      expect(tsconfig.include).toContain('src/**/*.tsx');
     });
   });
 
@@ -339,22 +339,22 @@ describe('config generators', () => {
   describe('Bun generatePackageJson', () => {
     it('should use bun build script for Bun+TS scaffold', () => {
       const pkg = JSON.parse(generatePackageJson(bunMockCtx));
-      expect(pkg.scripts.build).toBe('bun build --target=node --outdir=dist source/cli.tsx');
+      expect(pkg.scripts.build).toBe('bun build --target=node --outdir=dist src/cli.tsx');
     });
 
     it('should use bun build script for Bun+JS scaffold', () => {
       const pkg = JSON.parse(generatePackageJson({ ...bunMockCtx, language: 'javascript' }));
-      expect(pkg.scripts.build).toBe('bun build --target=node --outdir=dist source/cli.jsx');
+      expect(pkg.scripts.build).toBe('bun build --target=node --outdir=dist src/cli.jsx');
     });
 
     it('should use bun dev script for Bun+TS scaffold', () => {
       const pkg = JSON.parse(generatePackageJson(bunMockCtx));
-      expect(pkg.scripts.dev).toBe('bun --watch source/cli.tsx');
+      expect(pkg.scripts.dev).toBe('bun --watch src/cli.tsx');
     });
 
     it('should use bun dev script for Bun+JS scaffold', () => {
       const pkg = JSON.parse(generatePackageJson({ ...bunMockCtx, language: 'javascript' }));
-      expect(pkg.scripts.dev).toBe('bun --watch source/cli.jsx');
+      expect(pkg.scripts.dev).toBe('bun --watch src/cli.jsx');
     });
 
     it('should use bun start script for Bun scaffold', () => {

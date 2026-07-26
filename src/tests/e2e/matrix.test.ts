@@ -137,8 +137,8 @@ describe('E2E Matrix — all 8 scaffold combinations', () => {
         );
         expect(result.ok).toBe(true);
         const ext = combo.language === 'typescript' ? 'tsx' : 'jsx';
-        expect(fs.existsSync(path.join(tempDir, 'test-app', `source/app.${ext}`))).toBe(true);
-        expect(fs.existsSync(path.join(tempDir, 'test-app', `source/cli.${ext}`))).toBe(true);
+        expect(fs.existsSync(path.join(tempDir, 'test-app', `src/app.${ext}`))).toBe(true);
+        expect(fs.existsSync(path.join(tempDir, 'test-app', `src/cli.${ext}`))).toBe(true);
         expect(fs.existsSync(path.join(tempDir, 'test-app', `test.${ext}`))).toBe(true);
       });
 
@@ -246,7 +246,7 @@ describe('E2E Matrix — all 8 scaffold combinations', () => {
         expect(result.ok).toBe(true);
         const ext = combo.language === 'typescript' ? 'tsx' : 'jsx';
         const cliContent = fs.readFileSync(
-          path.join(tempDir, 'test-app', `source/cli.${ext}`),
+          path.join(tempDir, 'test-app', `src/cli.${ext}`),
           'utf-8',
         );
         const expectedShebang =

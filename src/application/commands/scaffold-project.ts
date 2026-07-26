@@ -117,10 +117,10 @@ const buildConfigEntries = (input: ScaffoldInput): ConfigEntry[] => {
 /** Get template files for a given language */
 const getTemplateFiles = (language: string): string[] => {
   if (language === 'javascript') {
-    return ['source/app.jsx.template', 'source/cli.jsx.template', 'test.jsx.template'];
+    return ['src/app.jsx.template', 'src/cli.jsx.template', 'test.jsx.template'];
   }
   // TypeScript (default)
-  return ['source/app.tsx.template', 'source/cli.tsx.template', 'test.tsx.template'];
+  return ['src/app.tsx.template', 'src/cli.tsx.template', 'test.tsx.template'];
 };
 
 /** Get the template subdirectory for a given runtime and language. Validates against known values to prevent path traversal. */
@@ -186,7 +186,7 @@ export const makeScaffoldProject: ScaffoldProject = (deps) => (input) => {
     }
 
     // Create source subdirectory
-    const mkdirSourceResult = deps.fs.createDirectory(`${targetDir}/source`);
+    const mkdirSourceResult = deps.fs.createDirectory(`${targetDir}/src`);
     if (!mkdirSourceResult.ok) {
       return err({
         kind: 'file_system',

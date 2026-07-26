@@ -96,7 +96,7 @@ describe('makeScaffoldProject', () => {
   it('should create the project directory', () => {
     scaffold(createValidInput());
     expect(deps.fs.createDirectory).toHaveBeenCalledWith('my-test-app');
-    expect(deps.fs.createDirectory).toHaveBeenCalledWith('my-test-app/source');
+    expect(deps.fs.createDirectory).toHaveBeenCalledWith('my-test-app/src');
   });
 
   it('should write files to the project directory', () => {
@@ -325,7 +325,7 @@ describe('makeScaffoldProject', () => {
       // TS: tsconfig.json
       // Biome: biome.json
       // Lefthook: lefthook.yml
-      // Templates: source/app.tsx, source/cli.tsx, test.tsx
+      // Templates: src/app.tsx, src/cli.tsx, test.tsx
       // Total: 7 always + 1 ts + 1 biome + 1 lefthook + 3 templates = 13
       expect(result.value.files).toHaveLength(13);
     }
@@ -344,7 +344,7 @@ describe('makeScaffoldProject', () => {
       // Always: package.json, compat.json, .gitignore, .editorconfig, readme.md, LICENSE, vitest.config.ts
       // ESLint+Prettier: eslint.config.js, .prettierrc
       // Husky: .husky/pre-commit
-      // Templates: source/app.jsx, source/cli.jsx, test.jsx
+      // Templates: src/app.jsx, src/cli.jsx, test.jsx
       // Total: 7 always + 2 eslint-prettier + 1 husky + 3 templates = 13
       expect(result.value.files).toHaveLength(13);
     }
@@ -363,7 +363,7 @@ describe('makeScaffoldProject', () => {
       // Always: package.json, compat.json, .gitignore, .editorconfig, readme.md, LICENSE, vitest.config.ts
       // None linter: nothing
       // None precommit: nothing
-      // Templates: source/app.jsx, source/cli.jsx, test.jsx
+      // Templates: src/app.jsx, src/cli.jsx, test.jsx
       // Total: 7 always + 3 templates = 10
       expect(result.value.files).toHaveLength(10);
     }
@@ -383,7 +383,7 @@ describe('makeScaffoldProject', () => {
       // TS: tsconfig.json
       // None linter: nothing
       // None precommit: nothing
-      // Templates: source/app.tsx, source/cli.tsx, test.tsx
+      // Templates: src/app.tsx, src/cli.tsx, test.tsx
       // Total: 7 always + 1 ts + 3 templates = 11
       expect(result.value.files).toHaveLength(11);
     }
@@ -541,7 +541,7 @@ describe('makeScaffoldProject', () => {
       // TS: tsconfig.json
       // Biome: biome.json
       // Lefthook: lefthook.yml
-      // Templates: source/app.tsx, source/cli.tsx, test.tsx
+      // Templates: src/app.tsx, src/cli.tsx, test.tsx
       // Total: 6 always + 1 ts + 1 biome + 1 lefthook + 3 templates = 12
       expect(result.value.files).toHaveLength(12);
     }
@@ -562,7 +562,7 @@ describe('makeScaffoldProject', () => {
       // TS: tsconfig.json
       // None linter: nothing
       // None precommit: nothing
-      // Templates: source/app.tsx, source/cli.tsx, test.tsx
+      // Templates: src/app.tsx, src/cli.tsx, test.tsx
       // Total: 6 always + 1 ts + 3 templates = 10
       expect(result.value.files).toHaveLength(10);
     }
@@ -582,7 +582,7 @@ describe('makeScaffoldProject', () => {
       // Always: package.json, compat.json, .gitignore, .editorconfig, readme.md, LICENSE
       // Biome: biome.json
       // Lefthook: lefthook.yml
-      // Templates: source/app.jsx, source/cli.jsx, test.jsx
+      // Templates: src/app.jsx, src/cli.jsx, test.jsx
       // Total: 6 always + 1 biome + 1 lefthook + 3 templates = 11
       expect(result.value.files).toHaveLength(11);
     }

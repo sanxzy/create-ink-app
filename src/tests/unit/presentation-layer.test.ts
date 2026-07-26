@@ -345,7 +345,7 @@ describe('output-formatters', () => {
   describe('formatScaffoldSuccess', () => {
     const success = formatScaffoldSuccess({
       projectDir: 'my-app',
-      files: ['my-app/package.json', 'my-app/source/app.tsx'],
+      files: ['my-app/package.json', 'my-app/src/app.tsx'],
     });
 
     it('should show success message', () => {
@@ -358,7 +358,7 @@ describe('output-formatters', () => {
 
     it('should list created files', () => {
       expect(success).toContain('package.json');
-      expect(success).toContain('source/app.tsx');
+      expect(success).toContain('src/app.tsx');
     });
 
     it('should show next steps', () => {

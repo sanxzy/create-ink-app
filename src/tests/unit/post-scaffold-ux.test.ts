@@ -25,7 +25,7 @@ import {
 describe('formatScaffoldSuccess - runtime-aware output', () => {
   const createResult = (overrides?: Partial<ScaffoldResult>): ScaffoldResult => ({
     projectDir: 'my-app',
-    files: ['my-app/package.json', 'my-app/source/app.tsx'],
+    files: ['my-app/package.json', 'my-app/src/app.tsx'],
     ...overrides,
   });
 

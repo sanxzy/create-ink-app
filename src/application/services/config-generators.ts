@@ -27,17 +27,15 @@ export const generatePackageJson = (ctx: GeneratorContext): string => {
 
   if (isBun) {
     // Bun runtime — use bun-native commands
-    scripts.build = `bun build --target=node --outdir=dist source/cli.${ctx.language === 'typescript' ? 'tsx' : 'jsx'}`;
-    scripts.dev = `bun --watch source/cli.${ctx.language === 'typescript' ? 'tsx' : 'jsx'}`;
+    scripts.build = `bun build --target=node --outdir=dist src/cli.${ctx.language === 'typescript' ? 'tsx' : 'jsx'}`;
+    scripts.dev = `bun --watch src/cli.${ctx.language === 'typescript' ? 'tsx' : 'jsx'}`;
     scripts.start = 'bun dist/cli.js';
     scripts.test = 'bun test';
   } else {
     // Node runtime
     scripts.build =
-      ctx.language === 'typescript'
-        ? 'tsc'
-        : 'bun build --target=node --outdir=dist source/cli.jsx';
-    scripts.dev = ctx.language === 'typescript' ? 'tsc --watch' : 'bun --watch source/cli.jsx';
+      ctx.language === 'typescript' ? 'tsc' : 'bun build --target=node --outdir=dist src/cli.jsx';
+    scripts.dev = ctx.language === 'typescript' ? 'tsc --watch' : 'bun --watch src/cli.jsx';
     scripts.start = 'node dist/cli.js';
     scripts.test = 'vitest run';
   }
@@ -49,13 +47,13 @@ export const generatePackageJson = (ctx: GeneratorContext): string => {
 
   // Linter-specific scripts
   if (ctx.linter === 'biome') {
-    scripts.lint = 'biome check source/';
-    scripts.format = 'biome format --write source/';
-    scripts.check = 'biome check --write source/';
+    scripts.lint = 'biome check src/';
+    scripts.format = 'biome format --write src/';
+    scripts.check = 'biome check --write src/';
   } else if (ctx.linter === 'eslint-prettier') {
-    scripts.lint = 'eslint source/';
-    scripts.format = 'prettier --write source/';
-    scripts.check = 'eslint source/ --fix';
+    scripts.lint = 'eslint src/';
+    scripts.format = 'prettier --write src/';
+    scripts.check = 'eslint src/ --fix';
   }
 
   const devDependencies: Record<string, string> = {};
@@ -118,7 +116,7 @@ export const generateTsconfig = (_ctx: GeneratorContext): string => {
         module: 'ESNext',
         moduleResolution: 'bundler',
         outDir: 'dist',
-        rootDir: 'source',
+        rootDir: 'src',
         strict: true,
         esModuleInterop: true,
         skipLibCheck: true,
@@ -131,7 +129,7 @@ export const generateTsconfig = (_ctx: GeneratorContext): string => {
         resolveJsonModule: true,
         isolatedModules: true,
       },
-      include: ['source/**/*.ts', 'source/**/*.tsx'],
+      include: ['src/**/*.ts', 'src/**/*.tsx'],
       exclude: ['node_modules', 'dist'],
     },
     null,

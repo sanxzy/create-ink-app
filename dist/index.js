@@ -188,13 +188,13 @@ var generatePackageJson = (ctx) => {
   const isBun = ctx.runtime === "bun";
   const scripts = {};
   if (isBun) {
-    scripts.build = `bun build --target=node --outdir=dist source/cli.${ctx.language === "typescript" ? "tsx" : "jsx"}`;
-    scripts.dev = `bun --watch source/cli.${ctx.language === "typescript" ? "tsx" : "jsx"}`;
+    scripts.build = `bun build --target=node --outdir=dist src/cli.${ctx.language === "typescript" ? "tsx" : "jsx"}`;
+    scripts.dev = `bun --watch src/cli.${ctx.language === "typescript" ? "tsx" : "jsx"}`;
     scripts.start = "bun dist/cli.js";
     scripts.test = "bun test";
   } else {
-    scripts.build = ctx.language === "typescript" ? "tsc" : "bun build --target=node --outdir=dist source/cli.jsx";
-    scripts.dev = ctx.language === "typescript" ? "tsc --watch" : "bun --watch source/cli.jsx";
+    scripts.build = ctx.language === "typescript" ? "tsc" : "bun build --target=node --outdir=dist src/cli.jsx";
+    scripts.dev = ctx.language === "typescript" ? "tsc --watch" : "bun --watch src/cli.jsx";
     scripts.start = "node dist/cli.js";
     scripts.test = "vitest run";
   }
@@ -202,13 +202,13 @@ var generatePackageJson = (ctx) => {
     scripts.typecheck = "tsc --noEmit";
   }
   if (ctx.linter === "biome") {
-    scripts.lint = "biome check source/";
-    scripts.format = "biome format --write source/";
-    scripts.check = "biome check --write source/";
+    scripts.lint = "biome check src/";
+    scripts.format = "biome format --write src/";
+    scripts.check = "biome check --write src/";
   } else if (ctx.linter === "eslint-prettier") {
-    scripts.lint = "eslint source/";
-    scripts.format = "prettier --write source/";
-    scripts.check = "eslint source/ --fix";
+    scripts.lint = "eslint src/";
+    scripts.format = "prettier --write src/";
+    scripts.check = "eslint src/ --fix";
   }
   const devDependencies = {};
   if (ctx.language === "typescript") {
@@ -254,7 +254,7 @@ var generateTsconfig = (_ctx) => {
       module: "ESNext",
       moduleResolution: "bundler",
       outDir: "dist",
-      rootDir: "source",
+      rootDir: "src",
       strict: true,
       esModuleInterop: true,
       skipLibCheck: true,
@@ -267,7 +267,7 @@ var generateTsconfig = (_ctx) => {
       resolveJsonModule: true,
       isolatedModules: true
     },
-    include: ["source/**/*.ts", "source/**/*.tsx"],
+    include: ["src/**/*.ts", "src/**/*.tsx"],
     exclude: ["node_modules", "dist"]
   }, null, 2);
 };
@@ -582,9 +582,9 @@ var buildConfigEntries = (input) => {
 };
 var getTemplateFiles = (language) => {
   if (language === "javascript") {
-    return ["source/app.jsx.template", "source/cli.jsx.template", "test.jsx.template"];
+    return ["src/app.jsx.template", "src/cli.jsx.template", "test.jsx.template"];
   }
-  return ["source/app.tsx.template", "source/cli.tsx.template", "test.tsx.template"];
+  return ["src/app.tsx.template", "src/cli.tsx.template", "test.tsx.template"];
 };
 var getTemplateDir = (runtime, language) => {
   const VALID_RUNTIMES = ["node", "bun"];
@@ -634,7 +634,7 @@ var makeScaffoldProject = (deps) => (input) => {
         message: mkdirResult.error.message
       });
     }
-    const mkdirSourceResult = deps.fs.createDirectory(`${targetDir}/source`);
+    const mkdirSourceResult = deps.fs.createDirectory(`${targetDir}/src`);
     if (!mkdirSourceResult.ok) {
       return err({
         kind: "file_system",
@@ -10322,7 +10322,7 @@ var runCreateApp = async (scaffoldProject, options) => {
 // package.json
 var package_default = {
   name: "@xzy-ai/create-ink-app",
-  version: "0.1.5",
+  version: "0.1.6",
   description: "Scaffold a complete, runnable Ink React project",
   type: "module",
   bin: {
