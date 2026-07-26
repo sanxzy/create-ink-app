@@ -64,16 +64,16 @@
 
 **Blocked by:** 01 — Node + TypeScript Scaffold Engine (tracer bullet), 02 — Interactive Wizard & Full State Resolution
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Bun + TS and Bun + JS scaffolds create correct project using `templates/bun/<language>/`
-- [ ] Bun `package.json` has `bun build`, `bun run dev`, `bun start`, `bun test` scripts
-- [ ] No `vitest.config.ts` generated for Bun scaffolds
-- [ ] Bun shebang (`#!/usr/bin/env bun`) in `cli.tsx`
-- [ ] Bun `.gitignore` includes `bun.lock`
-- [ ] Bun works with all linter options (Biome, ESLint+Prettier, none)
-- [ ] Bun works with all pre-commit options (Lefthook, Husky, none)
-- [ ] Runtime validation checks `bun --version` before scaffolding
+- [x] Bun + TS and Bun + JS scaffolds create correct project using `templates/bun/<language>/`
+- [x] Bun `package.json` has `bun build`, `bun run dev`, `bun start`, `bun test` scripts
+- [x] No `vitest.config.ts` generated for Bun scaffolds
+- [x] Bun shebang (`#!/usr/bin/env bun`) in `cli.tsx`
+- [x] Bun `.gitignore` includes `bun.lock`
+- [x] Bun works with all linter options (Biome, ESLint+Prettier, none)
+- [x] Bun works with all pre-commit options (Lefthook, Husky, none)
+- [x] Runtime validation checks `bun --version` before scaffolding
 
 ---
 
@@ -83,18 +83,18 @@
 
 **Blocked by:** 01 — Node + TypeScript Scaffold Engine (tracer bullet), 02 — Interactive Wizard & Full State Resolution
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Post-scaffold `outro()` shows runtime-aware dev command and option summary
-- [ ] `--immediate` with install=yes runs `execa` install with spinner and shows next steps
-- [ ] `--immediate` with install=no skips install but shows next-step instructions
-- [ ] Install command uses the detected/selected package manager
-- [ ] Failed install shows clear error and exits code 1
-- [ ] SIGINT/SIGTERM during scaffold cleans up partial output, exits code 0
-- [ ] Cancel at prompt shows formatted message, exits code 0, no files written
-- [ ] Overwrite modes (ask, yes, no) work correctly
-- [ ] `.` as project name scaffolds into current directory
-- [ ] Directory not writable detected early with clear error
+- [x] Post-scaffold `outro()` shows runtime-aware dev command and option summary
+- [x] `--immediate` with install=yes runs `execa` install with spinner and shows next steps
+- [x] `--immediate` with install=no skips install but shows next-step instructions
+- [x] Install command uses the detected/selected package manager
+- [x] Failed install shows clear error and exits code 1
+- [x] SIGINT/SIGTERM during scaffold cleans up partial output, exits code 0
+- [x] Cancel at prompt shows formatted message, exits code 0, no files written
+- [x] Overwrite modes (ask, yes, no) work correctly
+- [x] `.` as project name scaffolds into current directory
+- [x] Directory not writable detected early with clear error
 
 ---
 
@@ -104,11 +104,11 @@
 
 **Blocked by:** 03 — Extended Node.js Combinations (JavaScript, ESLint+Prettier, Husky, dry-run, runtime validation), 04 — Bun Runtime Support (all combinations), 05 — Post-Scaffold UX, Package Install, Cleanup & Polish
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Test fixtures exist: `createState()` helper, minimal template directories, expected output snapshots
-- [ ] All 8 E2E matrix combinations pass (scaffold, file verify, install, build, test): 1. Node+TS+Biome+Lefthook 2. Node+JS+ESLint+Prettier+none 3. Node+TS+none+Husky 4. Bun+TS+Biome+Lefthook 5. Bun+JS+ESLint+Prettier+none 6. Bun+TS+none+none 7. Node+TS+ESLint+Prettier+none 8. Node+JS+Biome+Lefthook
-- [ ] All three operating modes tested: interactive (mocked), non-interactive (flags), mixed (partial flags + prompts)
-- [ ] Edge case tests pass: spaces in paths, leading dot, current dir, uppercase normalized
-- [ ] Cross-platform path handling: `path` module usage, forward slashes, Windows path documentation
-- [ ] E2E tests run in CI only with parallel matrix and 10-minute timeout
+- [x] Test fixtures exist: `createState()` helper, minimal template directories, expected output snapshots
+- [x] All 8 E2E matrix combinations pass (scaffold, file verify, install, build, test): 1. Node+TS+Biome+Lefthook 2. Node+JS+ESLint+Prettier+none 3. Node+TS+none+Husky 4. Bun+TS+Biome+Lefthook 5. Bun+JS+ESLint+Prettier+none 6. Bun+TS+none+none 7. Node+TS+ESLint+Prettier+none 8. Node+JS+Biome+Lefthook
+- [x] All three operating modes tested: interactive (mocked), non-interactive (flags), mixed (partial flags + prompts)
+- [x] Edge case tests pass: spaces in paths, leading dot, current dir, uppercase normalized
+- [x] Cross-platform path handling: `path` module usage, forward slashes, Windows path documentation
+- [x] E2E tests run in CI only with parallel matrix and 10-minute timeout

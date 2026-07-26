@@ -10,18 +10,9 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// Mock execa before importing the module
-// vi.hoisted is hoisted above vi.mock, so the variable is defined when the factory runs
-const { mockExeca } = vi.hoisted(() => {
-  const mock = vi.fn();
-  return { mockExeca: mock };
-});
+vi.mock('execa', () => ({ execa: vi.fn() }));
 
-vi.mock('execa', () => {
-  return { execa: mockExeca };
-});
-
-// Import after mocking
+import { execa } from 'execa';
 import { installDependencies } from '@/presentation/install/package-installer';
 
 describe('installDependencies', () => {
@@ -34,56 +25,52 @@ describe('installDependencies', () => {
   };
 
   beforeEach(() => {
-    mockExeca.mockClear();
-  });
-
-  beforeEach(() => {
-    mockExeca.mockClear();
+    vi.clearAllMocks();
   });
 
   it('should spawn install with npm for npm package manager', async () => {
     const mockResult = { stdout: '', stderr: '', exitCode: 0, failed: false };
-    mockExeca.mockResolvedValue(mockResult);
+    execa.mockResolvedValue(mockResult);
 
     const spinner = createMockSpinner();
     await installDependencies({ cwd: '/tmp/test', packageManager: 'npm', spinner });
 
-    expect(mockExeca).toHaveBeenCalledWith('npm', ['install'], { cwd: '/tmp/test' });
+    expect(execa).toHaveBeenCalledWith('npm', ['install'], { cwd: '/tmp/test' });
   });
 
   it('should spawn install with pnpm for pnpm package manager', async () => {
     const mockResult = { stdout: '', stderr: '', exitCode: 0, failed: false };
-    mockExeca.mockResolvedValue(mockResult);
+    execa.mockResolvedValue(mockResult);
 
     const spinner = createMockSpinner();
     await installDependencies({ cwd: '/tmp/test', packageManager: 'pnpm', spinner });
 
-    expect(mockExeca).toHaveBeenCalledWith('pnpm', ['install'], { cwd: '/tmp/test' });
+    expect(execa).toHaveBeenCalledWith('pnpm', ['install'], { cwd: '/tmp/test' });
   });
 
   it('should spawn install with yarn for yarn package manager', async () => {
     const mockResult = { stdout: '', stderr: '', exitCode: 0, failed: false };
-    mockExeca.mockResolvedValue(mockResult);
+    execa.mockResolvedValue(mockResult);
 
     const spinner = createMockSpinner();
     await installDependencies({ cwd: '/tmp/test', packageManager: 'yarn', spinner });
 
-    expect(mockExeca).toHaveBeenCalledWith('yarn', ['install'], { cwd: '/tmp/test' });
+    expect(execa).toHaveBeenCalledWith('yarn', ['install'], { cwd: '/tmp/test' });
   });
 
   it('should spawn install with bun for bun package manager', async () => {
     const mockResult = { stdout: '', stderr: '', exitCode: 0, failed: false };
-    mockExeca.mockResolvedValue(mockResult);
+    execa.mockResolvedValue(mockResult);
 
     const spinner = createMockSpinner();
     await installDependencies({ cwd: '/tmp/test', packageManager: 'bun', spinner });
 
-    expect(mockExeca).toHaveBeenCalledWith('bun', ['install'], { cwd: '/tmp/test' });
+    expect(execa).toHaveBeenCalledWith('bun', ['install'], { cwd: '/tmp/test' });
   });
 
   it('should start spinner before install', async () => {
     const mockResult = { stdout: '', stderr: '', exitCode: 0, failed: false };
-    mockExeca.mockResolvedValue(mockResult);
+    execa.mockResolvedValue(mockResult);
 
     const spinner = createMockSpinner();
     await installDependencies({ cwd: '/tmp/test', packageManager: 'npm', spinner });
@@ -93,7 +80,7 @@ describe('installDependencies', () => {
 
   it('should stop spinner on successful install', async () => {
     const mockResult = { stdout: '', stderr: '', exitCode: 0, failed: false };
-    mockExeca.mockResolvedValue(mockResult);
+    execa.mockResolvedValue(mockResult);
 
     const spinner = createMockSpinner();
     await installDependencies({ cwd: '/tmp/test', packageManager: 'npm', spinner });
@@ -103,7 +90,7 @@ describe('installDependencies', () => {
 
   it('should show error on failed install', async () => {
     const mockResult = { stdout: '', stderr: 'Install failed', exitCode: 1, failed: true };
-    mockExeca.mockResolvedValue(mockResult);
+    execa.mockResolvedValue(mockResult);
 
     const spinner = createMockSpinner();
     const result = await installDependencies({
@@ -117,7 +104,7 @@ describe('installDependencies', () => {
   });
 
   it('should handle execa throwing an error', async () => {
-    mockExeca.mockRejectedValue(new Error('Command not found'));
+    execa.mockRejectedValue(new Error('Command not found'));
 
     const spinner = createMockSpinner();
     const result = await installDependencies({
@@ -132,7 +119,7 @@ describe('installDependencies', () => {
 
   it('should return success result on successful install', async () => {
     const mockResult = { stdout: '', stderr: '', exitCode: 0, failed: false };
-    mockExeca.mockResolvedValue(mockResult);
+    execa.mockResolvedValue(mockResult);
 
     const spinner = createMockSpinner();
     const result = await installDependencies({
