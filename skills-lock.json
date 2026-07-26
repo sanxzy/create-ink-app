@@ -14,10 +14,9 @@
       "computedHash": "296b345b5c8c1bf4bd2895daa4fc980dca146a063c55b0a25d9ad2ac28215947"
     },
     "generate-architecture": {
-      "source": "sanxzy/skills",
-      "sourceType": "github",
-      "skillPath": "generate-architecture/SKILL.md",
-      "computedHash": "d235d39450616320ec8fc32b2c1b3aef47eb03511214cc86e9c4a38fd99e4099"
+      "source": "/Users/budisantoso/Documents/Xzy/skills",
+      "sourceType": "local",
+      "computedHash": "ffe51e757256b6b413e780f0f507e7fe3407b0f4d69fe9375d762e4e241042cb"
     },
     "generate-design-md": {
       "source": "sanxzy/skills",
