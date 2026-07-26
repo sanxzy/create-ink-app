@@ -128,7 +128,10 @@ export const runInteractiveWizard = async (
   }
 
   // Package manager prompt (only if not provided via CLI)
-  if (!partial.packageManager) {
+  // When runtime is Bun, auto-set to 'bun' — Bun is both runtime and package manager
+  if (result.runtime === 'bun') {
+    result.packageManager = 'bun';
+  } else if (!partial.packageManager) {
     const pmResult = await prompts.select({
       message: 'Which package manager?',
       options: PM_OPTIONS,
@@ -153,8 +156,9 @@ export const runInteractiveWizard = async (
     result.linter = partial.linter;
   }
 
-  // Test framework prompt (only if not provided via CLI)
-  if (!partial.testFramework) {
+  // Test framework prompt (only if not provided via CLI and runtime is Node)
+  // Bun has its own built-in test runner — no prompt needed
+  if (result.runtime !== 'bun' && !partial.testFramework) {
     const testResult = await prompts.select({
       message: 'Which test framework?',
       options: TEST_OPTIONS,
@@ -162,7 +166,7 @@ export const runInteractiveWizard = async (
     });
     if (prompts.isCancel(testResult)) throw new Error('Cancelled');
     result.testFramework = testResult as typeof result.testFramework;
-  } else {
+  } else if (partial.testFramework) {
     result.testFramework = partial.testFramework;
   }
 

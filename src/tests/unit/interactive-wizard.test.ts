@@ -262,11 +262,11 @@ describe('runInteractiveWizard', () => {
 
   it('should use CLI-provided values and skip corresponding prompts', async () => {
     const textMock = vi.fn().mockResolvedValue('already-named');
+    // With Bun, only linter and precommit are prompted
+    // (package manager auto-sets to bun, test framework skipped — Bun has built-in)
     const selectMock = vi
       .fn()
-      .mockResolvedValueOnce('npm') // package manager (runtime skipped)
-      .mockResolvedValueOnce('biome') // linter (language skipped)
-      .mockResolvedValueOnce('vitest') // test framework
+      .mockResolvedValueOnce('biome') // linter
       .mockResolvedValueOnce('lefthook'); // precommit
 
     const confirmMock = vi.fn();
@@ -294,7 +294,8 @@ describe('runInteractiveWizard', () => {
     expect(result.installDeps).toBe(true);
 
     // Values from prompts should be used for remaining fields
-    expect(result.packageManager).toBe('npm');
+    // When runtime is Bun, package manager auto-sets to 'bun'
+    expect(result.packageManager).toBe('bun');
     expect(result.linter).toBe('biome');
     expect(result.testFramework).toBe('vitest');
     expect(result.preCommit).toBe('lefthook');

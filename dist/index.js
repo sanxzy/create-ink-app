@@ -9997,7 +9997,9 @@ var runInteractiveWizard = async (partial, prompts) => {
   } else {
     result.language = partial.language;
   }
-  if (!partial.packageManager) {
+  if (result.runtime === "bun") {
+    result.packageManager = "bun";
+  } else if (!partial.packageManager) {
     const pmResult = await prompts.select({
       message: "Which package manager?",
       options: PM_OPTIONS,
@@ -10021,7 +10023,7 @@ var runInteractiveWizard = async (partial, prompts) => {
   } else {
     result.linter = partial.linter;
   }
-  if (!partial.testFramework) {
+  if (result.runtime !== "bun" && !partial.testFramework) {
     const testResult = await prompts.select({
       message: "Which test framework?",
       options: TEST_OPTIONS,
@@ -10030,7 +10032,7 @@ var runInteractiveWizard = async (partial, prompts) => {
     if (prompts.isCancel(testResult))
       throw new Error("Cancelled");
     result.testFramework = testResult;
-  } else {
+  } else if (partial.testFramework) {
     result.testFramework = partial.testFramework;
   }
   if (!partial.preCommit) {
@@ -10320,7 +10322,7 @@ var runCreateApp = async (scaffoldProject, options) => {
 // package.json
 var package_default = {
   name: "@xzy-ai/create-ink-app",
-  version: "0.1.4",
+  version: "0.1.5",
   description: "Scaffold a complete, runnable Ink React project",
   type: "module",
   bin: {
