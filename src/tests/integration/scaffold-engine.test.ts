@@ -49,7 +49,6 @@ describe('Scaffold Engine Integration', () => {
 
   /** Get the project root by finding the templates directory */
   const getProjectRoot = (): string => {
-    // The project root is the original CWD (before we change to temp dir)
     return originalCwd;
   };
 
@@ -60,9 +59,12 @@ describe('Scaffold Engine Integration', () => {
       fs,
       templates,
       templatesDir: `${getProjectRoot()}/templates`,
+      checkRuntime: () => ({ ok: true, value: 'v18.0.0' }),
     });
     return scaffold(input);
   };
+
+  // === Existing tests (maintained) ===
 
   it('should create a valid project directory', () => {
     const result = scaffoldProject({
@@ -71,6 +73,9 @@ describe('Scaffold Engine Integration', () => {
       language: 'typescript',
       linter: 'biome',
       preCommit: 'lefthook',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
       overwrite: false,
       dryRun: false,
     });
@@ -89,6 +94,9 @@ describe('Scaffold Engine Integration', () => {
       language: 'typescript',
       linter: 'biome',
       preCommit: 'lefthook',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
       overwrite: false,
       dryRun: false,
     });
@@ -105,6 +113,7 @@ describe('Scaffold Engine Integration', () => {
       '.editorconfig',
       'readme.md',
       'LICENSE',
+      'vitest.config.ts',
       'source/app.tsx',
       'source/cli.tsx',
       'test.tsx',
@@ -123,6 +132,9 @@ describe('Scaffold Engine Integration', () => {
       language: 'typescript',
       linter: 'biome',
       preCommit: 'lefthook',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
       overwrite: false,
       dryRun: false,
     });
@@ -158,6 +170,9 @@ describe('Scaffold Engine Integration', () => {
       language: 'typescript',
       linter: 'biome',
       preCommit: 'lefthook',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
       overwrite: false,
       dryRun: false,
     });
@@ -179,6 +194,9 @@ describe('Scaffold Engine Integration', () => {
       language: 'typescript',
       linter: 'biome',
       preCommit: 'lefthook',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
       overwrite: false,
       dryRun: false,
     });
@@ -199,6 +217,9 @@ describe('Scaffold Engine Integration', () => {
       language: 'typescript',
       linter: 'biome',
       preCommit: 'lefthook',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
       overwrite: false,
       dryRun: false,
     });
@@ -221,6 +242,9 @@ describe('Scaffold Engine Integration', () => {
       language: 'typescript',
       linter: 'biome',
       preCommit: 'lefthook',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
       overwrite: false,
       dryRun: false,
     });
@@ -241,6 +265,9 @@ describe('Scaffold Engine Integration', () => {
       language: 'typescript',
       linter: 'biome',
       preCommit: 'lefthook',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
       overwrite: false,
       dryRun: false,
     });
@@ -263,6 +290,9 @@ describe('Scaffold Engine Integration', () => {
       language: 'typescript',
       linter: 'biome',
       preCommit: 'lefthook',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
       overwrite: false,
       dryRun: false,
     });
@@ -285,6 +315,9 @@ describe('Scaffold Engine Integration', () => {
       language: 'typescript',
       linter: 'biome',
       preCommit: 'lefthook',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
       overwrite: false,
       dryRun: false,
     });
@@ -297,6 +330,9 @@ describe('Scaffold Engine Integration', () => {
       language: 'typescript',
       linter: 'biome',
       preCommit: 'lefthook',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
       overwrite: false,
       dryRun: false,
     });
@@ -310,6 +346,9 @@ describe('Scaffold Engine Integration', () => {
       language: 'typescript',
       linter: 'biome',
       preCommit: 'lefthook',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
       overwrite: false,
       dryRun: false,
     });
@@ -324,21 +363,457 @@ describe('Scaffold Engine Integration', () => {
     expect(content).toContain(String(new Date().getFullYear()));
   });
 
-  it('should create 12 files in total', () => {
+  // === NEW: Node + JS scaffold ===
+
+  it('should create .jsx files for JavaScript scaffold', () => {
+    const result = scaffoldProject({
+      projectName: 'js-project',
+      runtime: 'node',
+      language: 'javascript',
+      linter: 'biome',
+      preCommit: 'lefthook',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
+      overwrite: false,
+      dryRun: false,
+    });
+
+    expect(result.ok).toBe(true);
+
+    // JS project should have .jsx files
+    expect(pathExists(path.join(tempDir, 'js-project', 'source', 'app.jsx'))).toBe(true);
+    expect(pathExists(path.join(tempDir, 'js-project', 'source', 'cli.jsx'))).toBe(true);
+    expect(pathExists(path.join(tempDir, 'js-project', 'test.jsx'))).toBe(true);
+  });
+
+  it('should not create tsconfig.json for JavaScript scaffold', () => {
+    const result = scaffoldProject({
+      projectName: 'js-project',
+      runtime: 'node',
+      language: 'javascript',
+      linter: 'biome',
+      preCommit: 'lefthook',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
+      overwrite: false,
+      dryRun: false,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(pathExists(path.join(tempDir, 'js-project', 'tsconfig.json'))).toBe(false);
+  });
+
+  it('should generate package.json without typescript devDeps for JS scaffold', () => {
+    const result = scaffoldProject({
+      projectName: 'js-project',
+      runtime: 'node',
+      language: 'javascript',
+      linter: 'biome',
+      preCommit: 'lefthook',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
+      overwrite: false,
+      dryRun: false,
+    });
+
+    expect(result.ok).toBe(true);
+
+    const pkgPath = path.join(tempDir, 'js-project', 'package.json');
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+
+    expect(pkg.devDependencies).not.toHaveProperty('typescript');
+    expect(pkg.devDependencies).not.toHaveProperty('@types/react');
+    expect(pkg.scripts).not.toHaveProperty('typecheck');
+  });
+
+  // === NEW: ESLint+Prettier ===
+
+  it('should generate eslint.config.js and .prettierrc for ESLint+Prettier', () => {
+    const result = scaffoldProject({
+      projectName: 'eslint-project',
+      runtime: 'node',
+      language: 'typescript',
+      linter: 'eslint-prettier',
+      preCommit: 'lefthook',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
+      overwrite: false,
+      dryRun: false,
+    });
+
+    expect(result.ok).toBe(true);
+
+    const eslintPath = path.join(tempDir, 'eslint-project', 'eslint.config.js');
+    const prettierPath = path.join(tempDir, 'eslint-project', '.prettierrc');
+
+    expect(pathExists(eslintPath)).toBe(true);
+    expect(pathExists(prettierPath)).toBe(true);
+
+    const eslintContent = fs.readFileSync(eslintPath, 'utf-8');
+    expect(eslintContent).toContain('export default');
+    expect(eslintContent).toContain('rules');
+
+    const prettierContent = JSON.parse(fs.readFileSync(prettierPath, 'utf-8'));
+    expect(prettierContent).toHaveProperty('semi');
+  });
+
+  it('should not generate biome.json when ESLint+Prettier is selected', () => {
+    const result = scaffoldProject({
+      projectName: 'eslint-project',
+      runtime: 'node',
+      language: 'typescript',
+      linter: 'eslint-prettier',
+      preCommit: 'lefthook',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
+      overwrite: false,
+      dryRun: false,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(pathExists(path.join(tempDir, 'eslint-project', 'biome.json'))).toBe(false);
+  });
+
+  // === NEW: Husky ===
+
+  it('should generate .husky/pre-commit for Husky', () => {
+    const result = scaffoldProject({
+      projectName: 'husky-project',
+      runtime: 'node',
+      language: 'typescript',
+      linter: 'biome',
+      preCommit: 'husky',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
+      overwrite: false,
+      dryRun: false,
+    });
+
+    expect(result.ok).toBe(true);
+
+    const huskyPath = path.join(tempDir, 'husky-project', '.husky', 'pre-commit');
+    expect(pathExists(huskyPath)).toBe(true);
+
+    const huskyContent = fs.readFileSync(huskyPath, 'utf-8');
+    expect(huskyContent).toContain('#!/usr/bin/env sh');
+    expect(huskyContent).toContain('npm test');
+  });
+
+  it('should not generate lefthook.yml when Husky is selected', () => {
+    const result = scaffoldProject({
+      projectName: 'husky-project',
+      runtime: 'node',
+      language: 'typescript',
+      linter: 'biome',
+      preCommit: 'husky',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
+      overwrite: false,
+      dryRun: false,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(pathExists(path.join(tempDir, 'husky-project', 'lefthook.yml'))).toBe(false);
+  });
+
+  // === NEW: None options ===
+
+  it('should not generate any linter config when linter is none', () => {
+    const result = scaffoldProject({
+      projectName: 'none-lint',
+      runtime: 'node',
+      language: 'typescript',
+      linter: 'none',
+      preCommit: 'lefthook',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
+      overwrite: false,
+      dryRun: false,
+    });
+
+    expect(result.ok).toBe(true);
+
+    const projectDir = path.join(tempDir, 'none-lint');
+    expect(pathExists(path.join(projectDir, 'biome.json'))).toBe(false);
+    expect(pathExists(path.join(projectDir, 'eslint.config.js'))).toBe(false);
+    expect(pathExists(path.join(projectDir, '.prettierrc'))).toBe(false);
+  });
+
+  it('should not generate any precommit config when precommit is none', () => {
+    const result = scaffoldProject({
+      projectName: 'none-hooks',
+      runtime: 'node',
+      language: 'typescript',
+      linter: 'biome',
+      preCommit: 'none',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
+      overwrite: false,
+      dryRun: false,
+    });
+
+    expect(result.ok).toBe(true);
+
+    const projectDir = path.join(tempDir, 'none-hooks');
+    expect(pathExists(path.join(projectDir, 'lefthook.yml'))).toBe(false);
+    expect(pathExists(path.join(projectDir, '.husky', 'pre-commit'))).toBe(false);
+  });
+
+  // === NEW: Dry-run ===
+
+  it('should not write any files in dry-run mode', () => {
+    const result = scaffoldProject({
+      projectName: 'dry-run-test',
+      runtime: 'node',
+      language: 'typescript',
+      linter: 'biome',
+      preCommit: 'lefthook',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
+      overwrite: false,
+      dryRun: true,
+    });
+
+    expect(result.ok).toBe(true);
+    // Directory should not exist
+    expect(pathExists(path.join(tempDir, 'dry-run-test'))).toBe(false);
+  });
+
+  it('should return the correct file list in dry-run mode', () => {
+    const result = scaffoldProject({
+      projectName: 'dry-run-test',
+      runtime: 'node',
+      language: 'typescript',
+      linter: 'biome',
+      preCommit: 'lefthook',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
+      overwrite: false,
+      dryRun: true,
+    });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      // Should list all files that would be created
+      expect(result.value.files.length).toBeGreaterThan(0);
+      expect(result.value.files).toContain('dry-run-test/package.json');
+      expect(result.value.files).toContain('dry-run-test/source/app.tsx');
+    }
+  });
+
+  // === NEW: Vitest config ===
+
+  it('should generate vitest.config.ts for Node scaffold', () => {
+    const result = scaffoldProject({
+      projectName: 'vitest-test',
+      runtime: 'node',
+      language: 'typescript',
+      linter: 'biome',
+      preCommit: 'lefthook',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
+      overwrite: false,
+      dryRun: false,
+    });
+
+    expect(result.ok).toBe(true);
+
+    const vitestPath = path.join(tempDir, 'vitest-test', 'vitest.config.ts');
+    expect(pathExists(vitestPath)).toBe(true);
+    const content = fs.readFileSync(vitestPath, 'utf-8');
+    expect(content).toContain('vitest/config');
+    expect(content).toContain('defineConfig');
+  });
+
+  // === NEW: File count checks ===
+
+  it('should create 13 files for default TS+Biome+Lefthook', () => {
     const result = scaffoldProject({
       projectName: 'count-test',
       runtime: 'node',
       language: 'typescript',
       linter: 'biome',
       preCommit: 'lefthook',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
       overwrite: false,
       dryRun: false,
     });
 
     expect(result.ok).toBe(true);
     if (result.ok) {
-      // Config files (9) + template files (3) = 12
-      expect(result.value.files).toHaveLength(12);
+      expect(result.value.files).toHaveLength(13);
+    }
+  });
+
+  it('should create 13 files for JS+ESLint+Husky', () => {
+    const result = scaffoldProject({
+      projectName: 'count-test-2',
+      runtime: 'node',
+      language: 'javascript',
+      linter: 'eslint-prettier',
+      preCommit: 'husky',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
+      overwrite: false,
+      dryRun: false,
+    });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.files).toHaveLength(13);
+    }
+  });
+
+  // === NEW: All combinations ===
+
+  const testCombinations = [
+    {
+      name: 'TS+Biome+Lefthook',
+      input: {
+        language: 'typescript' as const,
+        linter: 'biome' as const,
+        preCommit: 'lefthook' as const,
+      },
+    },
+    {
+      name: 'TS+Biome+Husky',
+      input: {
+        language: 'typescript' as const,
+        linter: 'biome' as const,
+        preCommit: 'husky' as const,
+      },
+    },
+    {
+      name: 'TS+ESLint+Lefthook',
+      input: {
+        language: 'typescript' as const,
+        linter: 'eslint-prettier' as const,
+        preCommit: 'lefthook' as const,
+      },
+    },
+    {
+      name: 'TS+ESLint+Husky',
+      input: {
+        language: 'typescript' as const,
+        linter: 'eslint-prettier' as const,
+        preCommit: 'husky' as const,
+      },
+    },
+    {
+      name: 'TS+none+none',
+      input: {
+        language: 'typescript' as const,
+        linter: 'none' as const,
+        preCommit: 'none' as const,
+      },
+    },
+    {
+      name: 'JS+Biome+Lefthook',
+      input: {
+        language: 'javascript' as const,
+        linter: 'biome' as const,
+        preCommit: 'lefthook' as const,
+      },
+    },
+    {
+      name: 'JS+ESLint+Husky',
+      input: {
+        language: 'javascript' as const,
+        linter: 'eslint-prettier' as const,
+        preCommit: 'husky' as const,
+      },
+    },
+    {
+      name: 'JS+none+none',
+      input: {
+        language: 'javascript' as const,
+        linter: 'none' as const,
+        preCommit: 'none' as const,
+      },
+    },
+  ];
+
+  for (const combo of testCombinations) {
+    it(`should scaffold ${combo.name} successfully`, () => {
+      const result = scaffoldProject({
+        projectName: `combo-${combo.name.toLowerCase().replace(/[+]/g, '-')}`,
+        runtime: 'node',
+        ...combo.input,
+        testFramework: 'vitest',
+        packageManager: 'npm',
+        installDeps: true,
+        overwrite: false,
+        dryRun: false,
+      });
+
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        // Should have files
+        expect(result.value.files.length).toBeGreaterThan(0);
+        // Must have essential files
+        expect(result.value.files.some((f: string) => f.endsWith('package.json'))).toBe(true);
+      }
+    });
+  }
+
+  // === NEW: Mutual exclusivity ===
+
+  it('should verify Biome and ESLint+Prettier are mutually exclusive', () => {
+    const biomeResult = scaffoldProject({
+      projectName: 'mutex-test',
+      runtime: 'node',
+      language: 'typescript',
+      linter: 'biome',
+      preCommit: 'lefthook',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
+      overwrite: false,
+      dryRun: false,
+    });
+
+    expect(biomeResult.ok).toBe(true);
+    if (biomeResult.ok) {
+      const files = biomeResult.value.files;
+      expect(files.some((f: string) => f.includes('biome.json'))).toBe(true);
+      expect(files.some((f: string) => f.includes('eslint.config.js'))).toBe(false);
+    }
+  });
+
+  it('should verify Lefthook and Husky are mutually exclusive', () => {
+    const lefthookResult = scaffoldProject({
+      projectName: 'mutex-lefthook',
+      runtime: 'node',
+      language: 'typescript',
+      linter: 'biome',
+      preCommit: 'lefthook',
+      testFramework: 'vitest',
+      packageManager: 'npm',
+      installDeps: true,
+      overwrite: false,
+      dryRun: false,
+    });
+
+    expect(lefthookResult.ok).toBe(true);
+    if (lefthookResult.ok) {
+      const files = lefthookResult.value.files;
+      expect(files.some((f: string) => f.includes('lefthook.yml'))).toBe(true);
+      expect(files.some((f: string) => f.includes('.husky/pre-commit'))).toBe(false);
     }
   });
 });

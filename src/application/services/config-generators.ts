@@ -6,14 +6,72 @@
  * (project name, runtime, language) into concrete output.
  */
 
+import type { Language, Linter, PreCommit, TestFramework } from '@/shared/types';
+
 export interface GeneratorContext {
   projectName: string;
   projectVersion: string;
   currentYear: string;
+  language: Language;
+  linter: Linter;
+  preCommit: PreCommit;
+  testFramework: TestFramework;
 }
 
-/** Generate package.json content */
+/** Generate package.json content — context-aware */
 export const generatePackageJson = (ctx: GeneratorContext): string => {
+  const scripts: Record<string, string> = {
+    build:
+      ctx.language === 'typescript'
+        ? 'tsc'
+        : 'bun build --target=node --outdir=dist source/cli.jsx',
+    dev: ctx.language === 'typescript' ? 'tsc --watch' : 'bun --watch source/cli.jsx',
+    start: 'node dist/cli.js',
+    test: 'vitest run',
+  };
+
+  // TypeScript-specific scripts
+  if (ctx.language === 'typescript') {
+    scripts.typecheck = 'tsc --noEmit';
+  }
+
+  // Linter-specific scripts
+  if (ctx.linter === 'biome') {
+    scripts.lint = 'biome check source/';
+    scripts.format = 'biome format --write source/';
+    scripts.check = 'biome check --write source/';
+  } else if (ctx.linter === 'eslint-prettier') {
+    scripts.lint = 'eslint source/';
+    scripts.format = 'prettier --write source/';
+    scripts.check = 'eslint source/ --fix';
+  }
+
+  const devDependencies: Record<string, string> = {};
+
+  // Language-specific devDeps
+  if (ctx.language === 'typescript') {
+    devDependencies.typescript = '^5.8.0';
+    devDependencies['@types/react'] = '^19.0.0';
+  }
+
+  // Linter-specific devDeps
+  if (ctx.linter === 'biome') {
+    devDependencies['@biomejs/biome'] = '^2.5.0';
+  } else if (ctx.linter === 'eslint-prettier') {
+    devDependencies.eslint = '^9.0.0';
+    devDependencies.prettier = '^3.5.0';
+  }
+
+  // Pre-commit-specific devDeps
+  if (ctx.preCommit === 'lefthook') {
+    devDependencies.lefthook = '^2.1.0';
+  } else if (ctx.preCommit === 'husky') {
+    devDependencies.husky = '^9.0.0';
+  }
+
+  // Test framework devDeps
+  devDependencies.vitest = '^4.1.0';
+
   return JSON.stringify(
     {
       name: ctx.projectName,
@@ -21,27 +79,12 @@ export const generatePackageJson = (ctx: GeneratorContext): string => {
       type: 'module',
       description: `${ctx.projectName} — Ink + React CLI application`,
       main: 'dist/cli.js',
-      scripts: {
-        build: 'tsc',
-        dev: 'tsc --watch',
-        start: 'node dist/cli.js',
-        test: 'vitest run',
-        lint: 'biome check source/',
-        format: 'biome format --write source/',
-        check: 'biome check --write source/',
-        typecheck: 'tsc --noEmit',
-      },
+      scripts,
       dependencies: {
         ink: '^7.1.0',
         react: '^19.0.0',
       },
-      devDependencies: {
-        '@biomejs/biome': '^2.5.0',
-        '@types/react': '^19.0.0',
-        lefthook: '^2.1.0',
-        typescript: '^5.8.0',
-        vitest: '^4.1.0',
-      },
+      devDependencies,
       engines: {
         node: '>=18.0.0',
       },
@@ -197,7 +240,7 @@ export const generateEditorconfig = (_ctx: GeneratorContext): string => {
 
 /** Generate readme.md content */
 export const generateReadme = (ctx: GeneratorContext): string => {
-  return [
+  const lines: string[] = [
     `# ${ctx.projectName}`,
     '',
     'An Ink + React CLI application scaffolded by create-ink-app.',
@@ -220,19 +263,29 @@ export const generateReadme = (ctx: GeneratorContext): string => {
     '',
     '## Available Scripts',
     '',
-    '- `npm run build` — Compile TypeScript to `dist/`',
+    '- `npm run build` — Compile to `dist/`',
     '- `npm run dev` — Watch mode for development',
     '- `npm start` — Run the CLI application',
     '- `npm test` — Run tests with Vitest',
-    '- `npm run lint` — Lint source code with Biome',
-    '- `npm run format` — Format source code with Biome',
-    '- `npm run check` — Apply lint fixes',
-    '- `npm run typecheck` — Type-check without emitting files',
-    '',
-    '## License',
-    '',
-    `MIT © ${ctx.currentYear}`,
-  ].join('\n');
+  ];
+
+  if (ctx.linter === 'biome') {
+    lines.push('- `npm run lint` — Lint source code with Biome');
+    lines.push('- `npm run format` — Format source code with Biome');
+    lines.push('- `npm run check` — Apply lint fixes');
+  } else if (ctx.linter === 'eslint-prettier') {
+    lines.push('- `npm run lint` — Lint source code with ESLint');
+    lines.push('- `npm run format` — Format source code with Prettier');
+    lines.push('- `npm run check` — Apply lint fixes');
+  }
+
+  if (ctx.language === 'typescript') {
+    lines.push('- `npm run typecheck` — Type-check without emitting files');
+  }
+
+  lines.push('', '## License', '', `MIT © ${ctx.currentYear}`);
+
+  return lines.join('\n');
 };
 
 /** Generate LICENSE content (MIT) */
@@ -260,5 +313,58 @@ export const generateLicense = (ctx: GeneratorContext): string => {
     'LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM',
     'OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE',
     'SOFTWARE.',
+  ].join('\n');
+};
+
+/** Generate eslint.config.js flat config content */
+export const generateEslintConfig = (_ctx: GeneratorContext): string => {
+  return [
+    '// Auto-generated by create-ink-app',
+    'export default [',
+    '  {',
+    '    rules: {',
+    '      semi: ["error", "always"],',
+    '      quotes: ["error", "single"],',
+    '      "no-unused-vars": "warn",',
+    '      "no-console": "off",',
+    '    },',
+    '    ignores: ["dist/"],',
+    '  },',
+    '];',
+    '',
+  ].join('\n');
+};
+
+/** Generate .prettierrc content */
+export const generatePrettierrc = (_ctx: GeneratorContext): string => {
+  return JSON.stringify(
+    {
+      semi: true,
+      singleQuote: true,
+      trailingComma: 'all',
+      printWidth: 100,
+      tabWidth: 2,
+    },
+    null,
+    2,
+  );
+};
+
+/** Generate .husky/pre-commit hook content */
+export const generateHuskyHook = (_ctx: GeneratorContext): string => {
+  return ['#!/usr/bin/env sh', '. "$(dirname -- "$0")/_/husky.sh"', '', 'npm test', ''].join('\n');
+};
+
+/** Generate vitest.config.ts content */
+export const generateVitestConfig = (_ctx: GeneratorContext): string => {
+  return [
+    "import { defineConfig } from 'vitest/config';",
+    '',
+    'export default defineConfig({',
+    '  test: {',
+    '    environment: "node",',
+    '  },',
+    '});',
+    '',
   ].join('\n');
 };

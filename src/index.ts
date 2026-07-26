@@ -12,6 +12,7 @@
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { makeScaffoldProject } from '@/application/commands/scaffold-project';
+import { makeNodeRuntimeChecker } from '@/infrastructure/cli/runtime-checker';
 import { makeNodeFileSystem } from '@/infrastructure/file-system/node-file-system';
 import { makeTemplateEngine } from '@/infrastructure/templates/template-engine';
 import { runCreateApp } from '@/presentation/commands/create-app';
@@ -27,12 +28,14 @@ const packageRoot = path.resolve(path.dirname(__filename), '..');
 // Create infrastructure implementations
 const fs = makeNodeFileSystem();
 const templates = makeTemplateEngine(fs);
+const checkRuntime = makeNodeRuntimeChecker();
 
 // Create the use case with injected dependencies
 const scaffoldProject = makeScaffoldProject({
   fs,
   templates,
   templatesDir: path.join(packageRoot, 'templates'),
+  checkRuntime,
 });
 
 // Run the CLI — now async to support the interactive wizard
