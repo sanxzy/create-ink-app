@@ -55,7 +55,15 @@ export const formatHelp = (): string => {
     '    --version               Show version number',
     '    --no-interactive        Skip interactive prompts',
     '    --overwrite             Overwrite existing directory',
+    '    --no-overwrite          Do not overwrite existing directory',
     '    --dry-run               Preview files without writing',
+    '    --immediate             Auto-install dependencies',
+    '    --runtime <runtime>     Runtime: node | bun',
+    '    --language <lang>       Language: typescript | javascript',
+    '    --linter <linter>       Linter: biome | eslint-prettier | none',
+    '    --test <framework>      Test framework: vitest | jest',
+    '    --precommit <tool>      Pre-commit tool: lefthook | husky | none',
+    '    --pm <manager>          Package manager: npm | pnpm | yarn | bun',
     '',
   ].join('\n');
 };
@@ -71,4 +79,19 @@ export const formatScaffoldResult = (
     return { text: formatScaffoldSuccess(result.value), exitCode: 0 };
   }
   return { text: formatScaffoldError(result.error), exitCode: 1 };
+};
+
+/** Format a message indicating auto-detection of non-interactive mode */
+export const formatNonInteractiveHint = (): string => {
+  return '  ℹ Non-TTY detected: running in non-interactive mode. Use --help for usage.';
+};
+
+/** Format a message for AI agent detection */
+export const formatAIAgentHint = (): string => {
+  return [
+    '  ℹ AI agent/CI environment detected.',
+    '  ℹ Use --no-interactive mode with all required flags:',
+    '    create-ink-app <project-name> --runtime node --language typescript --linter biome [options]',
+    '  ℹ Run with --help to see all available options.',
+  ].join('\n');
 };
