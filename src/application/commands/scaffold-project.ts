@@ -2,10 +2,17 @@
  * ScaffoldProject use case.
  *
  * Orchestrates the project scaffolding operation:
- * 1. Validate the project name
- * 2. Create the output directory
- * 3. Generate all project files (config + templates)
- * 4. Return the list of created files
+ * 1. Check runtime (Node.js) is installed
+ * 2. Validate the project name
+ * 3. Create the output directory
+ * 4. Generate all project files (config + templates)
+ * 5. Return the list of created files
+ *
+ * Supports multiple combinations:
+ * - Language: TypeScript (.tsx) or JavaScript (.jsx)
+ * - Linter: Biome, ESLint+Prettier, or none
+ * - Pre-commit: Lefthook, Husky, or none
+ * - Dry-run: preview without writing
  */
 
 import type { ScaffoldInput } from '@/application/dtos/scaffold-input';
@@ -14,12 +21,16 @@ import {
   generateBiomeJson,
   generateCompatJson,
   generateEditorconfig,
+  generateEslintConfig,
   generateGitignore,
+  generateHuskyHook,
   generateLefthookYml,
   generateLicense,
   generatePackageJson,
+  generatePrettierrc,
   generateReadme,
   generateTsconfig,
+  generateVitestConfig,
 } from '@/application/services/config-generators';
 import type { FileSystemPort, TemplateEnginePort } from '@/domain/repositories/ports';
 import { createProjectName } from '@/domain/value-objects/project-name';
@@ -30,19 +41,13 @@ export type ScaffoldError =
   | { kind: 'invalid_name'; message: string }
   | { kind: 'directory_exists'; message: string }
   | { kind: 'file_system'; message: string }
-  | { kind: 'template_error'; message: string };
+  | { kind: 'template_error'; message: string }
+  | { kind: 'runtime_not_found'; message: string };
 
 export interface ScaffoldResult {
   projectDir: string;
   files: string[];
 }
-
-/** Template files to process for Node + TypeScript */
-const NODE_TS_TEMPLATES = [
-  'source/app.tsx.template',
-  'source/cli.tsx.template',
-  'test.tsx.template',
-];
 
 /** Config generators to run with their output filenames */
 interface ConfigEntry {
@@ -50,29 +55,83 @@ interface ConfigEntry {
   generator: (ctx: GeneratorContext) => string;
 }
 
-const CONFIG_FILES: ConfigEntry[] = [
-  { filename: 'package.json', generator: generatePackageJson },
-  { filename: 'tsconfig.json', generator: generateTsconfig },
-  { filename: 'biome.json', generator: generateBiomeJson },
-  { filename: 'lefthook.yml', generator: generateLefthookYml },
-  { filename: 'compat.json', generator: generateCompatJson },
-  { filename: '.gitignore', generator: generateGitignore },
-  { filename: '.editorconfig', generator: generateEditorconfig },
-  { filename: 'readme.md', generator: generateReadme },
-  { filename: 'LICENSE', generator: generateLicense },
-];
-
 export interface ScaffoldDeps {
   fs: FileSystemPort;
   templates: TemplateEnginePort;
   templatesDir: string;
+  checkRuntime: () => Result<string, { kind: 'runtime_not_found'; message: string }>;
 }
 
 export type ScaffoldProject = (
   deps: ScaffoldDeps,
 ) => (input: ScaffoldInput) => Result<ScaffoldResult, ScaffoldError>;
 
+/**
+ * Build the list of config file entries based on the scaffold input.
+ * This makes the config generation fully declarative and easy to test.
+ */
+const buildConfigEntries = (input: ScaffoldInput): ConfigEntry[] => {
+  const entries: ConfigEntry[] = [
+    { filename: 'package.json', generator: generatePackageJson },
+    { filename: 'compat.json', generator: generateCompatJson },
+    { filename: '.gitignore', generator: generateGitignore },
+    { filename: '.editorconfig', generator: generateEditorconfig },
+    { filename: 'readme.md', generator: generateReadme },
+    { filename: 'LICENSE', generator: generateLicense },
+  ];
+
+  // Language: TypeScript gets tsconfig, JavaScript does not
+  if (input.language === 'typescript') {
+    entries.push({ filename: 'tsconfig.json', generator: generateTsconfig });
+  }
+
+  // Linter: mutually exclusive
+  if (input.linter === 'biome') {
+    entries.push({ filename: 'biome.json', generator: generateBiomeJson });
+  } else if (input.linter === 'eslint-prettier') {
+    entries.push({ filename: 'eslint.config.js', generator: generateEslintConfig });
+    entries.push({ filename: '.prettierrc', generator: generatePrettierrc });
+  }
+  // linter === 'none' → no lint config files
+
+  // Pre-commit: mutually exclusive
+  if (input.preCommit === 'lefthook') {
+    entries.push({ filename: 'lefthook.yml', generator: generateLefthookYml });
+  } else if (input.preCommit === 'husky') {
+    entries.push({ filename: '.husky/pre-commit', generator: generateHuskyHook });
+  }
+  // preCommit === 'none' → no hook config files
+
+  // Vitest config for Node scaffolds
+  entries.push({ filename: 'vitest.config.ts', generator: generateVitestConfig });
+
+  return entries;
+};
+
+/** Get template files for a given language */
+const getTemplateFiles = (language: string): string[] => {
+  if (language === 'javascript') {
+    return ['source/app.jsx.template', 'source/cli.jsx.template', 'test.jsx.template'];
+  }
+  // TypeScript (default)
+  return ['source/app.tsx.template', 'source/cli.tsx.template', 'test.tsx.template'];
+};
+
+/** Get the template directory for a given language */
+const getTemplateDir = (language: string): string => {
+  return `node/${language}`;
+};
+
 export const makeScaffoldProject: ScaffoldProject = (deps) => (input) => {
+  // 0. Check runtime is installed before any scaffolding
+  const runtimeResult = deps.checkRuntime();
+  if (!runtimeResult.ok) {
+    return err({
+      kind: 'runtime_not_found',
+      message: runtimeResult.error.message,
+    });
+  }
+
   // 1. Validate project name
   const nameResult = createProjectName(input.projectName);
   if (!nameResult.ok) {
@@ -118,10 +177,15 @@ export const makeScaffoldProject: ScaffoldProject = (deps) => (input) => {
     projectName: projectName.value,
     projectVersion: '1.0.0',
     currentYear: String(new Date().getFullYear()),
+    language: input.language,
+    linter: input.linter,
+    preCommit: input.preCommit,
+    testFramework: input.testFramework,
   };
 
-  // 4. Generate config files
-  for (const config of CONFIG_FILES) {
+  // 4. Generate config files — dynamically built based on input options
+  const configEntries = buildConfigEntries(input);
+  for (const config of configEntries) {
     const content = config.generator(ctx);
     const filePath = `${targetDir}/${config.filename}`;
 
@@ -138,8 +202,10 @@ export const makeScaffoldProject: ScaffoldProject = (deps) => (input) => {
   }
 
   // 5. Process template files
-  const templateDir = `${deps.templatesDir}/node/typescript`;
-  for (const templateFile of NODE_TS_TEMPLATES) {
+  const templateDir = `${deps.templatesDir}/${getTemplateDir(input.language)}`;
+  const templateFiles = getTemplateFiles(input.language);
+
+  for (const templateFile of templateFiles) {
     const templatePath = `${templateDir}/${templateFile}`;
 
     if (!input.dryRun) {
