@@ -35,5 +35,5 @@ const scaffoldProject = makeScaffoldProject({
   templatesDir: path.join(packageRoot, 'templates'),
 });
 
-// Run the CLI
+// Run the CLI — now async to support the interactive wizard
 runCreateApp(scaffoldProject, { version: pkg.version });

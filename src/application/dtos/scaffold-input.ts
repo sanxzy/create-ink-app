@@ -5,14 +5,24 @@
  * This is a clean DTO — no CLI parser types leak into the application layer.
  */
 
-import type { Language, Linter, PreCommit, Runtime } from '@/shared/types';
+import type {
+  Language,
+  Linter,
+  PackageManager,
+  PreCommit,
+  Runtime,
+  TestFramework,
+} from '@/shared/types';
 
 export interface ScaffoldInput {
   projectName: string;
   runtime: Runtime;
   language: Language;
   linter: Linter;
+  testFramework: TestFramework;
   preCommit: PreCommit;
+  packageManager: PackageManager;
+  installDeps: boolean;
   overwrite: boolean;
   dryRun: boolean;
 }
@@ -23,7 +33,10 @@ export const DEFAULT_SCAFFOLD_INPUT: ScaffoldInput = {
   runtime: 'node',
   language: 'typescript',
   linter: 'biome',
+  testFramework: 'vitest',
   preCommit: 'lefthook',
+  packageManager: 'npm',
+  installDeps: true,
   overwrite: false,
   dryRun: false,
 };
