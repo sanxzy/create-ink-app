@@ -11,7 +11,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock execa before importing the module
-const mockExeca = vi.fn();
+// vi.hoisted is hoisted above vi.mock, so the variable is defined when the factory runs
+const { mockExeca } = vi.hoisted(() => {
+  const mock = vi.fn();
+  return { mockExeca: mock };
+});
+
 vi.mock('execa', () => {
   return { execa: mockExeca };
 });
@@ -27,6 +32,10 @@ describe('installDependencies', () => {
     const message = vi.fn();
     return { start, stop, error, message };
   };
+
+  beforeEach(() => {
+    mockExeca.mockClear();
+  });
 
   beforeEach(() => {
     mockExeca.mockClear();
