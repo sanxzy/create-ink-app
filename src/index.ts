@@ -12,10 +12,14 @@
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { makeScaffoldProject } from '@/application/commands/scaffold-project';
-import { makeNodeRuntimeChecker } from '@/infrastructure/cli/runtime-checker';
+import {
+  makeBunRuntimeChecker,
+  makeNodeRuntimeChecker,
+} from '@/infrastructure/cli/runtime-checker';
 import { makeNodeFileSystem } from '@/infrastructure/file-system/node-file-system';
 import { makeTemplateEngine } from '@/infrastructure/templates/template-engine';
 import { runCreateApp } from '@/presentation/commands/create-app';
+import type { Runtime } from '@/shared/types';
 
 import pkg from '../package.json' with { type: 'json' };
 
@@ -28,7 +32,16 @@ const packageRoot = path.resolve(path.dirname(__filename), '..');
 // Create infrastructure implementations
 const fs = makeNodeFileSystem();
 const templates = makeTemplateEngine(fs);
-const checkRuntime = makeNodeRuntimeChecker();
+
+// Create runtime checkers for both Node.js and Bun
+const checkNodeRuntime = makeNodeRuntimeChecker();
+const checkBunRuntime = makeBunRuntimeChecker();
+
+// Combined runtime checker — selects the right checker based on runtime
+const checkRuntime = (runtime: Runtime) => {
+  if (runtime === 'bun') return checkBunRuntime();
+  return checkNodeRuntime();
+};
 
 // Create the use case with injected dependencies
 const scaffoldProject = makeScaffoldProject({

@@ -36,6 +36,8 @@ export const formatScaffoldError = (error: ScaffoldError): string => {
       return `  ✗ File system error: ${error.message}`;
     case 'template_error':
       return `  ✗ Template error: ${error.message}`;
+    case 'runtime_not_found':
+      return `  ✗ ${error.message}`;
   }
 };
 

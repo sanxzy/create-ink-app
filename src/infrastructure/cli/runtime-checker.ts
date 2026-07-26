@@ -32,3 +32,27 @@ export const makeNodeRuntimeChecker = (): (() => Result<
     }
   };
 };
+
+/** Check that Bun is installed and return its version */
+export const makeBunRuntimeChecker = (): (() => Result<
+  string,
+  {
+    kind: 'runtime_not_found';
+    message: string;
+  }
+>) => {
+  return () => {
+    try {
+      const output = execSync('bun --version', {
+        encoding: 'utf-8',
+        timeout: 5000,
+      });
+      return ok(output.trim());
+    } catch (error) {
+      return err({
+        kind: 'runtime_not_found' as const,
+        message: `Bun is not available: ${(error as Error).message}`,
+      });
+    }
+  };
+};
