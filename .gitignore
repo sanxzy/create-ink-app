@@ -35,3 +35,11 @@ tmp/
 
 # Worktrees
 .worktrees/
+
+# AI tooling & config
+.claude/
+.agents/
+.docs/
+.opencode/
+_xzy-ai/
+skills-lock.json
