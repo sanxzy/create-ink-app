@@ -25,6 +25,8 @@ export interface FileSystemPort {
   fileExists(path: string): boolean;
   copyFile(src: string, dest: string): Result<void, FileSystemError>;
   readDirectory(path: string): Result<string[], FileSystemError>;
+  /** Check if a directory is writable */
+  isWritable(path: string): boolean;
 }
 
 /** Template engine errors */

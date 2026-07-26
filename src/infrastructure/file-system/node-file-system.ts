@@ -94,6 +94,22 @@ export const makeNodeFileSystem = (): FileSystemPort => {
     }
   };
 
+  const isWritable = (dirPath: string): boolean => {
+    try {
+      fs.accessSync(dirPath, fs.constants.W_OK);
+      return true;
+    } catch {
+      // If the directory doesn't exist, check the parent
+      try {
+        const parent = path.dirname(path.resolve(dirPath));
+        fs.accessSync(parent, fs.constants.W_OK);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+  };
+
   return {
     readFile,
     writeFile,
@@ -102,5 +118,6 @@ export const makeNodeFileSystem = (): FileSystemPort => {
     fileExists,
     copyFile,
     readDirectory,
+    isWritable,
   };
 };
