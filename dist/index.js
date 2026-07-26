@@ -122,218 +122,8 @@ var require_lib = __commonJS((exports, module) => {
 });
 
 // src/index.ts
-import { fileURLToPath } from "node:url";
 import * as path2 from "node:path";
-
-// src/infrastructure/file-system/node-file-system.ts
-import fs from "node:fs";
-import path from "node:path";
-
-// src/shared/errors/result.ts
-var ok = (value) => ({ ok: true, value });
-var err = (error) => ({ ok: false, error });
-
-// src/infrastructure/file-system/node-file-system.ts
-var makeNodeFileSystem = () => {
-  const readFile = (filePath) => {
-    try {
-      const content = fs.readFileSync(filePath, "utf-8");
-      return ok(content);
-    } catch (error) {
-      return err({
-        kind: "read_error",
-        message: `Failed to read file "${filePath}": ${error.message}`
-      });
-    }
-  };
-  const writeFile = (filePath, content) => {
-    try {
-      const dir = path.dirname(filePath);
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-      }
-      fs.writeFileSync(filePath, content, "utf-8");
-      return ok(undefined);
-    } catch (error) {
-      return err({
-        kind: "write_error",
-        message: `Failed to write file "${filePath}": ${error.message}`
-      });
-    }
-  };
-  const createDirectory = (dirPath) => {
-    try {
-      fs.mkdirSync(dirPath, { recursive: true });
-      return ok(undefined);
-    } catch (error) {
-      return err({
-        kind: "mkdir_error",
-        message: `Failed to create directory "${dirPath}": ${error.message}`
-      });
-    }
-  };
-  const directoryExists = (dirPath) => {
-    try {
-      return fs.existsSync(dirPath) && fs.statSync(dirPath).isDirectory();
-    } catch {
-      return false;
-    }
-  };
-  const fileExists = (filePath) => {
-    try {
-      return fs.existsSync(filePath) && fs.statSync(filePath).isFile();
-    } catch {
-      return false;
-    }
-  };
-  const copyFile = (src, dest) => {
-    try {
-      fs.copyFileSync(src, dest);
-      return ok(undefined);
-    } catch (error) {
-      return err({
-        kind: "write_error",
-        message: `Failed to copy file from "${src}" to "${dest}": ${error.message}`
-      });
-    }
-  };
-  const readDirectory = (dirPath) => {
-    try {
-      const entries = fs.readdirSync(dirPath);
-      return ok(entries);
-    } catch (error) {
-      return err({
-        kind: "read_error",
-        message: `Failed to read directory "${dirPath}": ${error.message}`
-      });
-    }
-  };
-  return {
-    readFile,
-    writeFile,
-    createDirectory,
-    directoryExists,
-    fileExists,
-    copyFile,
-    readDirectory
-  };
-};
-
-// src/infrastructure/templates/template-engine.ts
-var makeTemplateEngine = (fs2) => {
-  const processTemplate = (template, vars) => {
-    return template.replace(/<%(\s*[A-Z_][A-Z0-9_]*\s*(?:\|[^%]*)?)\s*%>/g, (_match, key) => {
-      const trimmed = key.trim();
-      const pipeIndex = trimmed.indexOf("|");
-      let varName;
-      let defaultValue;
-      if (pipeIndex !== -1) {
-        varName = trimmed.slice(0, pipeIndex).trim();
-        defaultValue = trimmed.slice(pipeIndex + 1).trim();
-      } else {
-        varName = trimmed;
-        defaultValue = undefined;
-      }
-      if (varName in vars) {
-        return vars[varName];
-      }
-      if (defaultValue !== undefined) {
-        return defaultValue;
-      }
-      return _match;
-    });
-  };
-  const getOutputFilename = (templateFilename) => {
-    if (templateFilename.endsWith(".template")) {
-      return templateFilename.slice(0, -".template".length);
-    }
-    return templateFilename;
-  };
-  const processTemplateFile = (templatePath, vars, relativePath) => {
-    const readResult = fs2.readFile(templatePath);
-    if (!readResult.ok) {
-      return err({
-        kind: "template_not_found",
-        message: `Template not found: ${templatePath}`
-      });
-    }
-    const content = processTemplate(readResult.value, vars);
-    const outputFilename = getOutputFilename(relativePath || templatePath);
-    return ok({ content, outputFilename });
-  };
-  return {
-    processTemplate,
-    processTemplateFile,
-    getOutputFilename
-  };
-};
-
-// src/domain/value-objects/project-name.ts
-var RESERVED_NAMES = new Set([
-  "node_modules",
-  "favicon.ico",
-  "create-ink-app",
-  "ink",
-  "react",
-  "npm",
-  "node",
-  "bun"
-]);
-var MAX_LENGTH = 214;
-var createProjectName = (input) => {
-  const trimmed = input.trim();
-  if (trimmed.length === 0) {
-    return err({
-      kind: "empty",
-      message: "Project name cannot be empty."
-    });
-  }
-  if (trimmed.length > MAX_LENGTH) {
-    return err({
-      kind: "too_long",
-      message: `Project name must be ${MAX_LENGTH} characters or fewer.`
-    });
-  }
-  if (trimmed.startsWith("@")) {
-    const scopeAndName = trimmed.slice(1);
-    const parts = scopeAndName.split("/");
-    if (parts.length !== 2 || parts[0].length === 0 || parts[1].length === 0) {
-      return err({
-        kind: "invalid_character",
-        message: `"${trimmed}" is not a valid scoped package name. Use format @scope/name.`
-      });
-    }
-  }
-  if (trimmed !== trimmed.toLowerCase()) {
-    return err({
-      kind: "invalid_character",
-      message: `"${trimmed}" is not a valid project name. Use lowercase characters only.`
-    });
-  }
-  if (!trimmed.startsWith("@")) {
-    if (trimmed.startsWith(".") || trimmed.startsWith("_")) {
-      return err({
-        kind: "invalid_character",
-        message: `"${trimmed}" is not a valid project name. Project name cannot start with a dot or underscore.`
-      });
-    }
-  }
-  const validPattern = /^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/;
-  if (!validPattern.test(trimmed)) {
-    return err({
-      kind: "invalid_character",
-      message: `"${trimmed}" is not a valid project name. Use only lowercase letters, numbers, hyphens, underscores, and dots.`
-    });
-  }
-  const namePart = trimmed.startsWith("@") ? trimmed.split("/")[1] : trimmed;
-  if (RESERVED_NAMES.has(namePart)) {
-    return err({
-      kind: "reserved",
-      message: `"${namePart}" is a reserved package name and cannot be used as a project name.`
-    });
-  }
-  return ok({ value: trimmed });
-};
+import { fileURLToPath } from "node:url";
 
 // src/application/services/config-generators.ts
 var generatePackageJson = (ctx) => {
@@ -350,7 +140,7 @@ var generatePackageJson = (ctx) => {
       test: "vitest run",
       lint: "biome check source/",
       format: "biome format --write source/",
-      check: "biome check --apply source/",
+      check: "biome check --write source/",
       typecheck: "tsc --noEmit"
     },
     dependencies: {
@@ -396,11 +186,18 @@ var generateTsconfig = (_ctx) => {
 };
 var generateBiomeJson = (_ctx) => {
   return JSON.stringify({
-    $schema: "https://biomejs.dev/schemas/1.9.4/schema.json",
-    organizeImports: { enabled: true },
+    $schema: "https://biomejs.dev/schemas/2.5.5/schema.json",
+    assist: {
+      enabled: true,
+      actions: {
+        source: {
+          organizeImports: true
+        }
+      }
+    },
     linter: {
       enabled: true,
-      rules: { recommended: true }
+      rules: { preset: "recommended" }
     },
     formatter: {
       enabled: true,
@@ -423,11 +220,11 @@ var generateLefthookYml = (_ctx) => {
     "  parallel: true",
     "  commands:",
     "    typecheck:",
-    "      run: npx tsc --noEmit",
+    "      run: npm run typecheck",
     "    lint:",
-    "      run: npx biome check source/",
+    "      run: npm run lint",
     "    format:",
-    "      run: npx biome format --write source/",
+    "      run: npm run format",
     ""
   ].join(`
 `);
@@ -520,7 +317,7 @@ var generateReadme = (ctx) => {
     "",
     "## License",
     "",
-    "MIT © ${ctx.currentYear}"
+    `MIT © ${ctx.currentYear}`
   ].join(`
 `);
 };
@@ -550,6 +347,77 @@ var generateLicense = (ctx) => {
     "SOFTWARE."
   ].join(`
 `);
+};
+
+// src/shared/errors/result.ts
+var ok = (value) => ({ ok: true, value });
+var err = (error) => ({ ok: false, error });
+
+// src/domain/value-objects/project-name.ts
+var RESERVED_NAMES = new Set([
+  "node_modules",
+  "favicon.ico",
+  "create-ink-app",
+  "ink",
+  "react",
+  "npm",
+  "node",
+  "bun"
+]);
+var MAX_LENGTH = 214;
+var createProjectName = (input) => {
+  const trimmed = input.trim();
+  if (trimmed.length === 0) {
+    return err({
+      kind: "empty",
+      message: "Project name cannot be empty."
+    });
+  }
+  if (trimmed.length > MAX_LENGTH) {
+    return err({
+      kind: "too_long",
+      message: `Project name must be ${MAX_LENGTH} characters or fewer.`
+    });
+  }
+  if (trimmed.startsWith("@")) {
+    const scopeAndName = trimmed.slice(1);
+    const parts = scopeAndName.split("/");
+    if (parts.length !== 2 || parts[0].length === 0 || parts[1].length === 0) {
+      return err({
+        kind: "invalid_character",
+        message: `"${trimmed}" is not a valid scoped package name. Use format @scope/name.`
+      });
+    }
+  }
+  if (trimmed !== trimmed.toLowerCase()) {
+    return err({
+      kind: "invalid_character",
+      message: `"${trimmed}" is not a valid project name. Use lowercase characters only.`
+    });
+  }
+  if (!trimmed.startsWith("@")) {
+    if (trimmed.startsWith(".") || trimmed.startsWith("_")) {
+      return err({
+        kind: "invalid_character",
+        message: `"${trimmed}" is not a valid project name. Project name cannot start with a dot or underscore.`
+      });
+    }
+  }
+  const validPattern = /^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/;
+  if (!validPattern.test(trimmed)) {
+    return err({
+      kind: "invalid_character",
+      message: `"${trimmed}" is not a valid project name. Use only lowercase letters, numbers, hyphens, underscores, and dots.`
+    });
+  }
+  const namePart = trimmed.startsWith("@") ? trimmed.split("/")[1] : trimmed;
+  if (RESERVED_NAMES.has(namePart)) {
+    return err({
+      kind: "reserved",
+      message: `"${namePart}" is a reserved package name and cannot be used as a project name.`
+    });
+  }
+  return ok({ value: trimmed });
 };
 
 // src/application/commands/scaffold-project.ts
@@ -657,43 +525,145 @@ var makeScaffoldProject = (deps) => (input) => {
   });
 };
 
+// src/infrastructure/file-system/node-file-system.ts
+import fs from "node:fs";
+import path from "node:path";
+var makeNodeFileSystem = () => {
+  const readFile = (filePath) => {
+    try {
+      const content = fs.readFileSync(filePath, "utf-8");
+      return ok(content);
+    } catch (error) {
+      return err({
+        kind: "read_error",
+        message: `Failed to read file "${filePath}": ${error.message}`
+      });
+    }
+  };
+  const writeFile = (filePath, content) => {
+    try {
+      const dir = path.dirname(filePath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      fs.writeFileSync(filePath, content, "utf-8");
+      return ok(undefined);
+    } catch (error) {
+      return err({
+        kind: "write_error",
+        message: `Failed to write file "${filePath}": ${error.message}`
+      });
+    }
+  };
+  const createDirectory = (dirPath) => {
+    try {
+      fs.mkdirSync(dirPath, { recursive: true });
+      return ok(undefined);
+    } catch (error) {
+      return err({
+        kind: "mkdir_error",
+        message: `Failed to create directory "${dirPath}": ${error.message}`
+      });
+    }
+  };
+  const directoryExists = (dirPath) => {
+    try {
+      return fs.existsSync(dirPath) && fs.statSync(dirPath).isDirectory();
+    } catch {
+      return false;
+    }
+  };
+  const fileExists = (filePath) => {
+    try {
+      return fs.existsSync(filePath) && fs.statSync(filePath).isFile();
+    } catch {
+      return false;
+    }
+  };
+  const copyFile = (src, dest) => {
+    try {
+      fs.copyFileSync(src, dest);
+      return ok(undefined);
+    } catch (error) {
+      return err({
+        kind: "write_error",
+        message: `Failed to copy file from "${src}" to "${dest}": ${error.message}`
+      });
+    }
+  };
+  const readDirectory = (dirPath) => {
+    try {
+      const entries = fs.readdirSync(dirPath);
+      return ok(entries);
+    } catch (error) {
+      return err({
+        kind: "read_error",
+        message: `Failed to read directory "${dirPath}": ${error.message}`
+      });
+    }
+  };
+  return {
+    readFile,
+    writeFile,
+    createDirectory,
+    directoryExists,
+    fileExists,
+    copyFile,
+    readDirectory
+  };
+};
+
+// src/infrastructure/templates/template-engine.ts
+var makeTemplateEngine = (fs2) => {
+  const processTemplate = (template, vars) => {
+    return template.replace(/<%(\s*[A-Z_][A-Z0-9_]*\s*(?:\|[^%]*)?)\s*%>/g, (_match, key) => {
+      const trimmed = key.trim();
+      const pipeIndex = trimmed.indexOf("|");
+      let varName;
+      let defaultValue;
+      if (pipeIndex !== -1) {
+        varName = trimmed.slice(0, pipeIndex).trim();
+        defaultValue = trimmed.slice(pipeIndex + 1).trim();
+      } else {
+        varName = trimmed;
+        defaultValue = undefined;
+      }
+      if (Object.hasOwn(vars, varName)) {
+        return vars[varName];
+      }
+      if (defaultValue !== undefined) {
+        return defaultValue;
+      }
+      return _match;
+    });
+  };
+  const getOutputFilename = (templateFilename) => {
+    if (templateFilename.endsWith(".template")) {
+      return templateFilename.slice(0, -".template".length);
+    }
+    return templateFilename;
+  };
+  const processTemplateFile = (templatePath, vars, relativePath) => {
+    const readResult = fs2.readFile(templatePath);
+    if (!readResult.ok) {
+      return err({
+        kind: "template_not_found",
+        message: `Template not found: ${templatePath}`
+      });
+    }
+    const content = processTemplate(readResult.value, vars);
+    const outputFilename = getOutputFilename(relativePath || templatePath);
+    return ok({ content, outputFilename });
+  };
+  return {
+    processTemplate,
+    processTemplateFile,
+    getOutputFilename
+  };
+};
+
 // src/presentation/commands/create-app.ts
 var import_mri = __toESM(require_lib(), 1);
-
-// src/application/dtos/scaffold-input.ts
-var DEFAULT_SCAFFOLD_INPUT = {
-  projectName: "",
-  runtime: "node",
-  language: "typescript",
-  linter: "biome",
-  preCommit: "lefthook",
-  overwrite: false,
-  dryRun: false
-};
-
-// src/presentation/parsers/args-parser.ts
-var parseArgs = (args) => {
-  return {
-    help: args.help === true,
-    version: args.version === true,
-    noInteractive: args["no-interactive"] === true || args["noInteractive"] === true,
-    overwrite: args.overwrite === true,
-    dryRun: args.dryRun === true || args["dry-run"] === true,
-    projectName: typeof args._[0] === "string" ? args._[0] : "",
-    unknownArgs: args._.slice(1).map(String)
-  };
-};
-var parsedArgsToScaffoldInput = (parsed) => {
-  return {
-    projectName: parsed.projectName || DEFAULT_SCAFFOLD_INPUT.projectName,
-    runtime: DEFAULT_SCAFFOLD_INPUT.runtime,
-    language: DEFAULT_SCAFFOLD_INPUT.language,
-    linter: DEFAULT_SCAFFOLD_INPUT.linter,
-    preCommit: DEFAULT_SCAFFOLD_INPUT.preCommit,
-    overwrite: parsed.overwrite || DEFAULT_SCAFFOLD_INPUT.overwrite,
-    dryRun: parsed.dryRun || DEFAULT_SCAFFOLD_INPUT.dryRun
-  };
-};
 
 // src/presentation/formatters/output-formatter.ts
 var formatScaffoldSuccess = (result) => {
@@ -758,7 +728,53 @@ var formatScaffoldResult = (result) => {
   return { text: formatScaffoldError(result.error), exitCode: 1 };
 };
 
+// src/application/dtos/scaffold-input.ts
+var DEFAULT_SCAFFOLD_INPUT = {
+  projectName: "",
+  runtime: "node",
+  language: "typescript",
+  linter: "biome",
+  preCommit: "lefthook",
+  overwrite: false,
+  dryRun: false
+};
+
+// src/presentation/parsers/args-parser.ts
+var parseArgs = (args) => {
+  return {
+    help: args.help === true,
+    version: args.version === true,
+    noInteractive: args["no-interactive"] === true || args.noInteractive === true,
+    overwrite: args.overwrite === true,
+    dryRun: args.dryRun === true || args["dry-run"] === true,
+    projectName: typeof args._[0] === "string" ? args._[0] : "",
+    unknownArgs: args._.slice(1).map(String)
+  };
+};
+var parsedArgsToScaffoldInput = (parsed) => {
+  return {
+    projectName: parsed.projectName || DEFAULT_SCAFFOLD_INPUT.projectName,
+    runtime: DEFAULT_SCAFFOLD_INPUT.runtime,
+    language: DEFAULT_SCAFFOLD_INPUT.language,
+    linter: DEFAULT_SCAFFOLD_INPUT.linter,
+    preCommit: DEFAULT_SCAFFOLD_INPUT.preCommit,
+    overwrite: parsed.overwrite || DEFAULT_SCAFFOLD_INPUT.overwrite,
+    dryRun: parsed.dryRun || DEFAULT_SCAFFOLD_INPUT.dryRun
+  };
+};
+
 // src/presentation/commands/create-app.ts
+var gracefulExit = (code) => {
+  process.stdout.write("", () => {
+    if (code !== 0) {
+      process.stderr.write("", () => {
+        process.exit(code);
+      });
+    } else {
+      process.exit(code);
+    }
+  });
+};
 var runCreateApp = (scaffoldProject, options) => {
   const rawArgs = process.argv.slice(2);
   const parsed = import_mri.default(rawArgs, {
@@ -781,21 +797,25 @@ var runCreateApp = (scaffoldProject, options) => {
   const args = parseArgs(parsed);
   if (args.help) {
     console.log(formatHelp());
-    process.exit(0);
+    gracefulExit(0);
+    return;
   }
   if (args.version) {
     console.log(formatVersion(options.version));
-    process.exit(0);
+    gracefulExit(0);
+    return;
   }
   if (!args.projectName && !args.noInteractive) {
     console.error("  ✗ Project name is required.");
     console.error("  Usage: create-ink-app <project-name> [options]");
     console.error("  Try:   create-ink-app --help");
-    process.exit(1);
+    gracefulExit(1);
+    return;
   }
   if (!args.projectName) {
     console.error("  ✗ Project name is required when running in non-interactive mode.");
-    process.exit(1);
+    gracefulExit(1);
+    return;
   }
   const input = parsedArgsToScaffoldInput(args);
   const result = scaffoldProject(input);
@@ -805,7 +825,7 @@ var runCreateApp = (scaffoldProject, options) => {
   } else {
     console.error(text);
   }
-  process.exit(exitCode);
+  gracefulExit(exitCode);
 };
 // package.json
 var package_default = {
@@ -824,7 +844,7 @@ var package_default = {
     "test:watch": "vitest",
     lint: "biome check src/",
     format: "biome format --write src/",
-    check: "biome check --apply src/",
+    check: "biome check --write src/",
     typecheck: "tsc --noEmit"
   },
   dependencies: {
@@ -833,7 +853,9 @@ var package_default = {
   devDependencies: {
     "@biomejs/biome": "^2.5.5",
     "@types/node": "^22.0.0",
+    "@vitest/coverage-v8": "^4.1.10",
     lefthook: "^2.1.10",
+    tempy: "^3.2.0",
     typescript: "^5.8.0",
     vitest: "^4.1.10"
   },

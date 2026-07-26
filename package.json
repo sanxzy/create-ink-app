@@ -14,7 +14,7 @@
     "test:watch": "vitest",
     "lint": "biome check src/",
     "format": "biome format --write src/",
-    "check": "biome check --apply src/",
+    "check": "biome check --write src/",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -23,7 +23,9 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.5",
     "@types/node": "^22.0.0",
+    "@vitest/coverage-v8": "^4.1.10",
     "lefthook": "^2.1.10",
+    "tempy": "^3.2.0",
     "typescript": "^5.8.0",
     "vitest": "^4.1.10"
   },

@@ -6,19 +6,13 @@
  */
 
 import fs from 'node:fs';
-import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { temporaryDirectory } from 'tempy';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { makeScaffoldProject } from '@/application/commands/scaffold-project';
 import type { ScaffoldInput } from '@/application/dtos/scaffold-input';
 import { makeNodeFileSystem } from '@/infrastructure/file-system/node-file-system';
 import { makeTemplateEngine } from '@/infrastructure/templates/template-engine';
-
-/** Create a unique temp directory for testing */
-const createTempDir = (): string => {
-  const dir = fs.mkdtempSync(path.join(tmpdir(), 'create-ink-app-test-'));
-  return dir;
-};
 
 /** Remove a temp directory and its contents */
 const removeTempDir = (dir: string): void => {
@@ -42,7 +36,7 @@ describe('Scaffold Engine Integration', () => {
   let originalCwd: string;
 
   beforeEach(() => {
-    tempDir = createTempDir();
+    tempDir = temporaryDirectory();
     originalCwd = process.cwd();
     // Change to the temp directory so the scaffold creates files there
     process.chdir(tempDir);

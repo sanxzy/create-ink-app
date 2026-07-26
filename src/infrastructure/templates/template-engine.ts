@@ -36,7 +36,8 @@ export const makeTemplateEngine = (fs: FileSystemPort): TemplateEnginePort => {
         defaultValue = undefined;
       }
 
-      if (varName in vars) {
+      // Use Object.hasOwn to check only own properties, avoiding prototype chain traversal
+      if (Object.hasOwn(vars, varName)) {
         return vars[varName];
       }
 

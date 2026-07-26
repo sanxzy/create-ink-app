@@ -25,6 +25,20 @@ export interface CliOptions {
   version: string;
 }
 
+/** Helper to flush stdout/stderr and exit with a code */
+const gracefulExit = (code: number): void => {
+  // Flush pending writes before exiting to avoid truncating piped output
+  process.stdout.write('', () => {
+    if (code !== 0) {
+      process.stderr.write('', () => {
+        process.exit(code);
+      });
+    } else {
+      process.exit(code);
+    }
+  });
+};
+
 /** Main CLI handler — the composition root entry point for the create-app command */
 export const runCreateApp = (
   scaffoldProject: ReturnType<ScaffoldProject>,
@@ -56,13 +70,15 @@ export const runCreateApp = (
   // Handle --help
   if (args.help) {
     console.log(formatHelp());
-    process.exit(0);
+    gracefulExit(0);
+    return;
   }
 
   // Handle --version
   if (args.version) {
     console.log(formatVersion(options.version));
-    process.exit(0);
+    gracefulExit(0);
+    return;
   }
 
   // Validate project name is provided
@@ -70,12 +86,14 @@ export const runCreateApp = (
     console.error('  ✗ Project name is required.');
     console.error('  Usage: create-ink-app <project-name> [options]');
     console.error('  Try:   create-ink-app --help');
-    process.exit(1);
+    gracefulExit(1);
+    return;
   }
 
   if (!args.projectName) {
     console.error('  ✗ Project name is required when running in non-interactive mode.');
-    process.exit(1);
+    gracefulExit(1);
+    return;
   }
 
   // Convert to scaffold input and execute
@@ -88,5 +106,5 @@ export const runCreateApp = (
   } else {
     console.error(text);
   }
-  process.exit(exitCode);
+  gracefulExit(exitCode);
 };

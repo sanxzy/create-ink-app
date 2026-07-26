@@ -104,7 +104,14 @@ export const createProjectName = (input: string): Result<ProjectName, ProjectNam
   return ok({ value: trimmed });
 };
 
-/** Normalize a project name for use in templates (lowercase, replace spaces with hyphens) */
+/**
+ * Normalize a project name for use in templates (lowercase, replace spaces with hyphens).
+ *
+ * WARNING: This function is NOT safe for file path construction. The output preserves
+ * dots (`.`) and underscores (`_`), which could permit path traversal sequences (`..`)
+ * if used in file system operations. Use `createProjectName()` for validated names
+ * suitable for directory creation.
+ */
 export const normalizeProjectName = (input: string): string => {
   return input
     .trim()

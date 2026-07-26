@@ -28,7 +28,7 @@ export const generatePackageJson = (ctx: GeneratorContext): string => {
         test: 'vitest run',
         lint: 'biome check source/',
         format: 'biome format --write source/',
-        check: 'biome check --apply source/',
+        check: 'biome check --write source/',
         typecheck: 'tsc --noEmit',
       },
       dependencies: {
@@ -125,11 +125,11 @@ export const generateLefthookYml = (_ctx: GeneratorContext): string => {
     '  parallel: true',
     '  commands:',
     '    typecheck:',
-    '      run: npx tsc --noEmit',
+    '      run: npm run typecheck',
     '    lint:',
-    '      run: npx biome check source/',
+    '      run: npm run lint',
     '    format:',
-    '      run: npx biome format --write source/',
+    '      run: npm run format',
     '',
   ].join('\n');
 };
