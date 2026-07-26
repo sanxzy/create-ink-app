@@ -1,0 +1,17 @@
+import React from 'react';
+import { describe, it, expect } from 'vitest';
+import { render } from 'ink';
+import App from './source/app.js';
+
+describe('App', () => {
+  it('should render without crashing', () => {
+    const { lastFrame } = render(<App name="test-app" />);
+    expect(lastFrame()).toBeDefined();
+  });
+
+  it('should show the project name', () => {
+    const { lastFrame } = render(<App name="<% PROJECT_NAME %>" />);
+    const frame = lastFrame();
+    expect(frame).toContain('<% PROJECT_NAME %>');
+  });
+});

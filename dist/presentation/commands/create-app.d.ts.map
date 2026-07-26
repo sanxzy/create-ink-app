@@ -1,0 +1,1 @@
+{"version":3,"file":"create-app.d.ts","sourceRoot":"","sources":["../../../src/presentation/commands/create-app.ts"],"names":[],"mappings":"AAAA;;;;;;;;;;;GAWG;AAIH,OAAO,KAAK,EAAE,eAAe,EAAE,MAAM,yCAAyC,CAAC;AAQ/E,MAAM,WAAW,UAAU;IACzB,OAAO,EAAE,MAAM,CAAC;CACjB;AAED,qFAAqF;AACrF,eAAO,MAAM,YAAY,GACvB,iBAAiB,UAAU,CAAC,eAAe,CAAC,EAC5C,SAAS,UAAU,KAClB,IA4DF,CAAC"}
