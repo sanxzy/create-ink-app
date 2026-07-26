@@ -11,7 +11,6 @@
  */
 
 import type { ScaffoldInput } from '@/application/dtos/scaffold-input';
-import { DEFAULT_SCAFFOLD_INPUT } from '@/application/dtos/scaffold-input';
 
 export interface ParsedArgs {
   help: boolean;
@@ -62,21 +61,47 @@ export const parseArgs = (args: MriLikeArgs): ParsedArgs => {
   };
 };
 
-/** Convert parsed args to a partial ScaffoldInput DTO, using defaults for missing values */
+/**
+ * Convert parsed args to a partial ScaffoldInput DTO.
+ *
+ * Only includes fields that were explicitly provided by the user.
+ * String fields are included only when non-empty.
+ * Boolean fields (overwrite, dryRun) are included only when true
+ * (explicitly passed via --overwrite or --dry-run).
+ * The wizard then prompts for any missing fields.
+ */
 export const parsedArgsToScaffoldInput = (parsed: ParsedArgs): Partial<ScaffoldInput> => {
-  return {
-    projectName: parsed.projectName || DEFAULT_SCAFFOLD_INPUT.projectName,
-    runtime: (parsed.runtime as ScaffoldInput['runtime']) || DEFAULT_SCAFFOLD_INPUT.runtime,
-    language: (parsed.language as ScaffoldInput['language']) || DEFAULT_SCAFFOLD_INPUT.language,
-    linter: (parsed.linter as ScaffoldInput['linter']) || DEFAULT_SCAFFOLD_INPUT.linter,
-    testFramework:
-      (parsed.testFramework as ScaffoldInput['testFramework']) ||
-      DEFAULT_SCAFFOLD_INPUT.testFramework,
-    preCommit: (parsed.preCommit as ScaffoldInput['preCommit']) || DEFAULT_SCAFFOLD_INPUT.preCommit,
-    packageManager:
-      (parsed.packageManager as ScaffoldInput['packageManager']) ||
-      DEFAULT_SCAFFOLD_INPUT.packageManager,
-    overwrite: parsed.overwrite || DEFAULT_SCAFFOLD_INPUT.overwrite,
-    dryRun: parsed.dryRun || DEFAULT_SCAFFOLD_INPUT.dryRun,
-  };
+  const result: Partial<ScaffoldInput> = {};
+
+  if (parsed.projectName) {
+    result.projectName = parsed.projectName;
+  }
+  if (parsed.runtime) {
+    result.runtime = parsed.runtime as ScaffoldInput['runtime'];
+  }
+  if (parsed.language) {
+    result.language = parsed.language as ScaffoldInput['language'];
+  }
+  if (parsed.linter) {
+    result.linter = parsed.linter as ScaffoldInput['linter'];
+  }
+  if (parsed.testFramework) {
+    result.testFramework = parsed.testFramework as ScaffoldInput['testFramework'];
+  }
+  if (parsed.preCommit) {
+    result.preCommit = parsed.preCommit as ScaffoldInput['preCommit'];
+  }
+  if (parsed.packageManager) {
+    result.packageManager = parsed.packageManager as ScaffoldInput['packageManager'];
+  }
+
+  // Boolean fields: only include if explicitly set by the user (differs from default)
+  if (parsed.overwrite) {
+    result.overwrite = true;
+  }
+  if (parsed.dryRun) {
+    result.dryRun = true;
+  }
+
+  return result;
 };

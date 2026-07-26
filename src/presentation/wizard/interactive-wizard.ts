@@ -191,6 +191,5 @@ export const runInteractiveWizard = async (
     result.installDeps = partial.installDeps;
   }
 
-  prompts.outro('Ready to scaffold!');
   return result;
 };

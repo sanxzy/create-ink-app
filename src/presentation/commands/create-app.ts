@@ -256,6 +256,9 @@ export const runCreateApp = async (
         finalInput.overwrite = overwriteResult as boolean;
       }
 
+      // Ready to scaffold — after overwrite check passes
+      clackPrompts.outro('Ready to scaffold!');
+
       // Execute scaffold
       scaffoldStarted = true;
       const result = scaffoldProject(finalInput);

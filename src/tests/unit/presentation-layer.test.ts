@@ -148,7 +148,7 @@ describe('parseArgs', () => {
 });
 
 describe('parsedArgsToScaffoldInput', () => {
-  it('should convert parsed args with project name', () => {
+  it('should only include project name when other fields are empty', () => {
     const result = parsedArgsToScaffoldInput({
       help: false,
       version: false,
@@ -166,13 +166,16 @@ describe('parsedArgsToScaffoldInput', () => {
       packageManager: '',
       unknownArgs: [],
     });
+    // Only projectName should be set — empty strings and default booleans are excluded
     expect(result.projectName).toBe('my-app');
-    expect(result.runtime).toBe('node');
-    expect(result.language).toBe('typescript');
-    expect(result.linter).toBe('biome');
-    expect(result.preCommit).toBe('lefthook');
-    expect(result.dryRun).toBe(false);
-    expect(result.overwrite).toBe(false);
+    expect(result).not.toHaveProperty('runtime');
+    expect(result).not.toHaveProperty('language');
+    expect(result).not.toHaveProperty('linter');
+    expect(result).not.toHaveProperty('preCommit');
+    expect(result).not.toHaveProperty('packageManager');
+    expect(result).not.toHaveProperty('testFramework');
+    expect(result).not.toHaveProperty('dryRun');
+    expect(result).not.toHaveProperty('overwrite');
   });
 
   it('should propagate overwrite and dryRun flags', () => {
@@ -223,7 +226,7 @@ describe('parsedArgsToScaffoldInput', () => {
     expect(result.packageManager).toBe('pnpm');
   });
 
-  it('should default project name to empty string when not provided', () => {
+  it('should not include projectName when empty string', () => {
     const result = parsedArgsToScaffoldInput({
       help: false,
       version: false,
@@ -241,7 +244,7 @@ describe('parsedArgsToScaffoldInput', () => {
       packageManager: '',
       unknownArgs: [],
     });
-    expect(result.projectName).toBe('');
+    expect(result).not.toHaveProperty('projectName');
   });
 });
 

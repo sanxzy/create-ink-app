@@ -9888,17 +9888,35 @@ var parseArgs = (args) => {
   };
 };
 var parsedArgsToScaffoldInput = (parsed) => {
-  return {
-    projectName: parsed.projectName || DEFAULT_SCAFFOLD_INPUT.projectName,
-    runtime: parsed.runtime || DEFAULT_SCAFFOLD_INPUT.runtime,
-    language: parsed.language || DEFAULT_SCAFFOLD_INPUT.language,
-    linter: parsed.linter || DEFAULT_SCAFFOLD_INPUT.linter,
-    testFramework: parsed.testFramework || DEFAULT_SCAFFOLD_INPUT.testFramework,
-    preCommit: parsed.preCommit || DEFAULT_SCAFFOLD_INPUT.preCommit,
-    packageManager: parsed.packageManager || DEFAULT_SCAFFOLD_INPUT.packageManager,
-    overwrite: parsed.overwrite || DEFAULT_SCAFFOLD_INPUT.overwrite,
-    dryRun: parsed.dryRun || DEFAULT_SCAFFOLD_INPUT.dryRun
-  };
+  const result = {};
+  if (parsed.projectName) {
+    result.projectName = parsed.projectName;
+  }
+  if (parsed.runtime) {
+    result.runtime = parsed.runtime;
+  }
+  if (parsed.language) {
+    result.language = parsed.language;
+  }
+  if (parsed.linter) {
+    result.linter = parsed.linter;
+  }
+  if (parsed.testFramework) {
+    result.testFramework = parsed.testFramework;
+  }
+  if (parsed.preCommit) {
+    result.preCommit = parsed.preCommit;
+  }
+  if (parsed.packageManager) {
+    result.packageManager = parsed.packageManager;
+  }
+  if (parsed.overwrite) {
+    result.overwrite = true;
+  }
+  if (parsed.dryRun) {
+    result.dryRun = true;
+  }
+  return result;
 };
 
 // src/presentation/wizard/interactive-wizard.ts
@@ -10038,7 +10056,6 @@ var runInteractiveWizard = async (partial, prompts) => {
   } else {
     result.installDeps = partial.installDeps;
   }
-  prompts.outro("Ready to scaffold!");
   return result;
 };
 
@@ -10196,6 +10213,7 @@ var runCreateApp = async (scaffoldProject, options) => {
         }
         finalInput2.overwrite = overwriteResult;
       }
+      outro("Ready to scaffold!");
       scaffoldStarted = true;
       const result2 = scaffoldProject(finalInput2);
       const scaffoldOptions2 = {
@@ -10301,12 +10319,12 @@ var runCreateApp = async (scaffoldProject, options) => {
 };
 // package.json
 var package_default = {
-  name: "create-ink-app",
-  version: "0.1.0",
+  name: "@xzy-ai/create-ink-app",
+  version: "0.1.4",
   description: "Scaffold a complete, runnable Ink React project",
   type: "module",
   bin: {
-    "create-ink-app": "./dist/index.js"
+    "create-ink-app": "bin/create-ink-app.js"
   },
   scripts: {
     build: "bun build --target=node --outdir=dist src/index.ts",
@@ -10339,6 +10357,7 @@ var package_default = {
   files: [
     "dist/",
     "templates/",
+    "bin/",
     "package.json"
   ]
 };

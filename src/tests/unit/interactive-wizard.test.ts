@@ -6,7 +6,7 @@
  * - All prompts are called for values not provided by CLI flags
  * - Prompts are skipped for values already provided by CLI flags
  * - Cancel signal is handled
- * - Intro/outro are called
+ * - Intro is called at the start
  */
 
 import { describe, expect, it, vi } from 'vitest';
@@ -206,13 +206,13 @@ describe('runInteractiveWizard', () => {
     expect(introMock).toHaveBeenCalledWith('create-ink-app');
   });
 
-  it('should call outro on completion', async () => {
+  it('should not call outro (moved to create-app.ts after overwrite check)', async () => {
     const outroMock = vi.fn();
     const prompts = createMockPrompts({ outro: outroMock });
 
     await runInteractiveWizard({}, prompts);
 
-    expect(outroMock).toHaveBeenCalled();
+    expect(outroMock).not.toHaveBeenCalled();
   });
 
   it('should throw on cancel signal', async () => {

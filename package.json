@@ -1,10 +1,10 @@
 {
   "name": "@xzy-ai/create-ink-app",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "description": "Scaffold a complete, runnable Ink React project",
   "type": "module",
   "bin": {
-    "create-ink-app": "./dist/index.js"
+    "create-ink-app": "bin/create-ink-app.js"
   },
   "scripts": {
     "build": "bun build --target=node --outdir=dist src/index.ts",
@@ -37,6 +37,7 @@
   "files": [
     "dist/",
     "templates/",
+    "bin/",
     "package.json"
   ]
 }
