@@ -474,4 +474,273 @@ describe('makeScaffoldProject', () => {
       }
     });
   }
+
+  // === BUN SCAFFOLD TESTS ===
+
+  it('should use bun/typescript template directory for Bun+TS scaffold', () => {
+    scaffold(createValidInput({ runtime: 'bun', language: 'typescript' }));
+    const templatePaths = (
+      deps.templates.processTemplateFile as ReturnType<typeof vi.fn>
+    ).mock.calls.map((call: [string]) => call[0]);
+    for (const path of templatePaths) {
+      expect(path).toContain('bun/typescript');
+    }
+  });
+
+  it('should use bun/javascript template directory for Bun+JS scaffold', () => {
+    scaffold(createValidInput({ runtime: 'bun', language: 'javascript' }));
+    const templatePaths = (
+      deps.templates.processTemplateFile as ReturnType<typeof vi.fn>
+    ).mock.calls.map((call: [string]) => call[0]);
+    for (const path of templatePaths) {
+      expect(path).toContain('bun/javascript');
+    }
+  });
+
+  it('should not include vitest.config.ts for Bun scaffold', () => {
+    scaffold(createValidInput({ runtime: 'bun' }));
+    const writtenPaths = (deps.fs.writeFile as ReturnType<typeof vi.fn>).mock.calls.map(
+      (call: [string]) => call[0],
+    );
+    expect(writtenPaths).not.toContain('my-test-app/vitest.config.ts');
+  });
+
+  it('should include vitest.config.ts for Node scaffold', () => {
+    scaffold(createValidInput({ runtime: 'node' }));
+    const writtenPaths = (deps.fs.writeFile as ReturnType<typeof vi.fn>).mock.calls.map(
+      (call: [string]) => call[0],
+    );
+    expect(writtenPaths).toContain('my-test-app/vitest.config.ts');
+  });
+
+  it('should pass runtime to checkRuntime for Bun scaffold', () => {
+    scaffold(createValidInput({ runtime: 'bun' }));
+    expect(deps.checkRuntime).toHaveBeenCalledWith('bun');
+  });
+
+  it('should pass runtime to checkRuntime for Node scaffold', () => {
+    scaffold(createValidInput({ runtime: 'node' }));
+    expect(deps.checkRuntime).toHaveBeenCalledWith('node');
+  });
+
+  // === Bun file count checks ===
+
+  it('should create correct number of files for Bun+TS+Biome+Lefthook', () => {
+    const result = scaffold(
+      createValidInput({
+        runtime: 'bun',
+        language: 'typescript',
+        linter: 'biome',
+        preCommit: 'lefthook',
+      }),
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      // Always: package.json, compat.json, .gitignore, .editorconfig, readme.md, LICENSE
+      // TS: tsconfig.json
+      // Biome: biome.json
+      // Lefthook: lefthook.yml
+      // Templates: source/app.tsx, source/cli.tsx, test.tsx
+      // Total: 6 always + 1 ts + 1 biome + 1 lefthook + 3 templates = 12
+      expect(result.value.files).toHaveLength(12);
+    }
+  });
+
+  it('should create correct number of files for Bun+TS+none+none', () => {
+    const result = scaffold(
+      createValidInput({
+        runtime: 'bun',
+        language: 'typescript',
+        linter: 'none',
+        preCommit: 'none',
+      }),
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      // Always: package.json, compat.json, .gitignore, .editorconfig, readme.md, LICENSE
+      // TS: tsconfig.json
+      // None linter: nothing
+      // None precommit: nothing
+      // Templates: source/app.tsx, source/cli.tsx, test.tsx
+      // Total: 6 always + 1 ts + 3 templates = 10
+      expect(result.value.files).toHaveLength(10);
+    }
+  });
+
+  it('should create correct number of files for Bun+JS+Biome+Lefthook', () => {
+    const result = scaffold(
+      createValidInput({
+        runtime: 'bun',
+        language: 'javascript',
+        linter: 'biome',
+        preCommit: 'lefthook',
+      }),
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      // Always: package.json, compat.json, .gitignore, .editorconfig, readme.md, LICENSE
+      // Biome: biome.json
+      // Lefthook: lefthook.yml
+      // Templates: source/app.jsx, source/cli.jsx, test.jsx
+      // Total: 6 always + 1 biome + 1 lefthook + 3 templates = 11
+      expect(result.value.files).toHaveLength(11);
+    }
+  });
+
+  // === Bun combinations (all 12) ===
+
+  const bunCombinations: Array<{
+    name: string;
+    input: Partial<ScaffoldInput>;
+    shouldInclude: string[];
+    shouldExclude: string[];
+  }> = [
+    {
+      name: 'Bun+TS+Biome+Lefthook',
+      input: { runtime: 'bun', language: 'typescript', linter: 'biome', preCommit: 'lefthook' },
+      shouldInclude: ['tsconfig.json', 'biome.json', 'lefthook.yml'],
+      shouldExclude: ['eslint.config.js', '.prettierrc', '.husky/pre-commit', 'vitest.config.ts'],
+    },
+    {
+      name: 'Bun+TS+Biome+Husky',
+      input: { runtime: 'bun', language: 'typescript', linter: 'biome', preCommit: 'husky' },
+      shouldInclude: ['tsconfig.json', 'biome.json', '.husky/pre-commit'],
+      shouldExclude: ['eslint.config.js', '.prettierrc', 'lefthook.yml', 'vitest.config.ts'],
+    },
+    {
+      name: 'Bun+TS+Biome+none',
+      input: { runtime: 'bun', language: 'typescript', linter: 'biome', preCommit: 'none' },
+      shouldInclude: ['tsconfig.json', 'biome.json'],
+      shouldExclude: [
+        'eslint.config.js',
+        '.prettierrc',
+        'lefthook.yml',
+        '.husky/pre-commit',
+        'vitest.config.ts',
+      ],
+    },
+    {
+      name: 'Bun+TS+ESLint+Lefthook',
+      input: {
+        runtime: 'bun',
+        language: 'typescript',
+        linter: 'eslint-prettier',
+        preCommit: 'lefthook',
+      },
+      shouldInclude: ['tsconfig.json', 'eslint.config.js', '.prettierrc', 'lefthook.yml'],
+      shouldExclude: ['biome.json', '.husky/pre-commit', 'vitest.config.ts'],
+    },
+    {
+      name: 'Bun+TS+ESLint+Husky',
+      input: {
+        runtime: 'bun',
+        language: 'typescript',
+        linter: 'eslint-prettier',
+        preCommit: 'husky',
+      },
+      shouldInclude: ['tsconfig.json', 'eslint.config.js', '.prettierrc', '.husky/pre-commit'],
+      shouldExclude: ['biome.json', 'lefthook.yml', 'vitest.config.ts'],
+    },
+    {
+      name: 'Bun+TS+ESLint+none',
+      input: {
+        runtime: 'bun',
+        language: 'typescript',
+        linter: 'eslint-prettier',
+        preCommit: 'none',
+      },
+      shouldInclude: ['tsconfig.json', 'eslint.config.js', '.prettierrc'],
+      shouldExclude: ['biome.json', 'lefthook.yml', '.husky/pre-commit', 'vitest.config.ts'],
+    },
+    {
+      name: 'Bun+TS+none+Lefthook',
+      input: { runtime: 'bun', language: 'typescript', linter: 'none', preCommit: 'lefthook' },
+      shouldInclude: ['tsconfig.json', 'lefthook.yml'],
+      shouldExclude: [
+        'biome.json',
+        'eslint.config.js',
+        '.prettierrc',
+        '.husky/pre-commit',
+        'vitest.config.ts',
+      ],
+    },
+    {
+      name: 'Bun+TS+none+Husky',
+      input: { runtime: 'bun', language: 'typescript', linter: 'none', preCommit: 'husky' },
+      shouldInclude: ['tsconfig.json', '.husky/pre-commit'],
+      shouldExclude: [
+        'biome.json',
+        'eslint.config.js',
+        '.prettierrc',
+        'lefthook.yml',
+        'vitest.config.ts',
+      ],
+    },
+    {
+      name: 'Bun+TS+none+none',
+      input: { runtime: 'bun', language: 'typescript', linter: 'none', preCommit: 'none' },
+      shouldInclude: ['tsconfig.json'],
+      shouldExclude: [
+        'biome.json',
+        'eslint.config.js',
+        '.prettierrc',
+        'lefthook.yml',
+        '.husky/pre-commit',
+        'vitest.config.ts',
+      ],
+    },
+    {
+      name: 'Bun+JS+Biome+Lefthook',
+      input: { runtime: 'bun', language: 'javascript', linter: 'biome', preCommit: 'lefthook' },
+      shouldInclude: ['biome.json', 'lefthook.yml'],
+      shouldExclude: [
+        'tsconfig.json',
+        'eslint.config.js',
+        '.prettierrc',
+        '.husky/pre-commit',
+        'vitest.config.ts',
+      ],
+    },
+    {
+      name: 'Bun+JS+ESLint+Husky',
+      input: {
+        runtime: 'bun',
+        language: 'javascript',
+        linter: 'eslint-prettier',
+        preCommit: 'husky',
+      },
+      shouldInclude: ['eslint.config.js', '.prettierrc', '.husky/pre-commit'],
+      shouldExclude: ['tsconfig.json', 'biome.json', 'lefthook.yml', 'vitest.config.ts'],
+    },
+    {
+      name: 'Bun+JS+none+none',
+      input: { runtime: 'bun', language: 'javascript', linter: 'none', preCommit: 'none' },
+      shouldInclude: [],
+      shouldExclude: [
+        'tsconfig.json',
+        'biome.json',
+        'eslint.config.js',
+        '.prettierrc',
+        'lefthook.yml',
+        '.husky/pre-commit',
+        'vitest.config.ts',
+      ],
+    },
+  ];
+
+  for (const combo of bunCombinations) {
+    it(`should scaffold ${combo.name} with correct files`, () => {
+      scaffold(createValidInput(combo.input));
+      const writtenPaths = (deps.fs.writeFile as ReturnType<typeof vi.fn>).mock.calls.map(
+        (call: [string]) => call[0],
+      );
+
+      for (const include of combo.shouldInclude) {
+        expect(writtenPaths).toContain(`my-test-app/${include}`);
+      }
+      for (const exclude of combo.shouldExclude) {
+        expect(writtenPaths).not.toContain(`my-test-app/${exclude}`);
+      }
+    });
+  }
 });

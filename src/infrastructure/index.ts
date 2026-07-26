@@ -7,6 +7,9 @@ export {
   isAIAgent,
   isInteractive,
 } from '@/infrastructure/cli/environment-detector';
-export { makeNodeRuntimeChecker } from '@/infrastructure/cli/runtime-checker';
+export {
+  makeBunRuntimeChecker,
+  makeNodeRuntimeChecker,
+} from '@/infrastructure/cli/runtime-checker';
 export { makeNodeFileSystem } from '@/infrastructure/file-system/node-file-system';
 export { makeTemplateEngine } from '@/infrastructure/templates/template-engine';

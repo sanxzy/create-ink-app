@@ -20,6 +20,18 @@ const mockCtx: GeneratorContext = {
   projectName: 'my-test-app',
   projectVersion: '1.0.0',
   currentYear: '2026',
+  runtime: 'node',
+  language: 'typescript',
+  linter: 'biome',
+  preCommit: 'lefthook',
+  testFramework: 'vitest',
+};
+
+const bunMockCtx: GeneratorContext = {
+  projectName: 'my-bun-app',
+  projectVersion: '1.0.0',
+  currentYear: '2026',
+  runtime: 'bun',
   language: 'typescript',
   linter: 'biome',
   preCommit: 'lefthook',
@@ -319,6 +331,149 @@ describe('config generators', () => {
     it('should define test environment', () => {
       expect(content).toContain('environment');
       expect(content).toContain('node');
+    });
+  });
+
+  // === BUN RUNTIME TESTS ===
+
+  describe('Bun generatePackageJson', () => {
+    it('should use bun build script for Bun+TS scaffold', () => {
+      const pkg = JSON.parse(generatePackageJson(bunMockCtx));
+      expect(pkg.scripts.build).toBe('bun build --target=node --outdir=dist source/cli.tsx');
+    });
+
+    it('should use bun build script for Bun+JS scaffold', () => {
+      const pkg = JSON.parse(generatePackageJson({ ...bunMockCtx, language: 'javascript' }));
+      expect(pkg.scripts.build).toBe('bun build --target=node --outdir=dist source/cli.jsx');
+    });
+
+    it('should use bun dev script for Bun+TS scaffold', () => {
+      const pkg = JSON.parse(generatePackageJson(bunMockCtx));
+      expect(pkg.scripts.dev).toBe('bun --watch source/cli.tsx');
+    });
+
+    it('should use bun dev script for Bun+JS scaffold', () => {
+      const pkg = JSON.parse(generatePackageJson({ ...bunMockCtx, language: 'javascript' }));
+      expect(pkg.scripts.dev).toBe('bun --watch source/cli.jsx');
+    });
+
+    it('should use bun start script for Bun scaffold', () => {
+      const pkg = JSON.parse(generatePackageJson(bunMockCtx));
+      expect(pkg.scripts.start).toBe('bun dist/cli.js');
+    });
+
+    it('should use bun test script for Bun scaffold', () => {
+      const pkg = JSON.parse(generatePackageJson(bunMockCtx));
+      expect(pkg.scripts.test).toBe('bun test');
+    });
+
+    it('should not include vitest devDep for Bun scaffold', () => {
+      const pkg = JSON.parse(generatePackageJson(bunMockCtx));
+      expect(pkg.devDependencies).not.toHaveProperty('vitest');
+    });
+
+    it('should include typecheck and typescript for Bun+TS scaffold', () => {
+      const pkg = JSON.parse(generatePackageJson(bunMockCtx));
+      expect(pkg.scripts).toHaveProperty('typecheck');
+      expect(pkg.devDependencies).toHaveProperty('typescript');
+      expect(pkg.devDependencies).toHaveProperty('@types/react');
+    });
+
+    it('should exclude typecheck and typescript for Bun+JS scaffold', () => {
+      const pkg = JSON.parse(generatePackageJson({ ...bunMockCtx, language: 'javascript' }));
+      expect(pkg.scripts).not.toHaveProperty('typecheck');
+      expect(pkg.devDependencies).not.toHaveProperty('typescript');
+      expect(pkg.devDependencies).not.toHaveProperty('@types/react');
+    });
+
+    it('should include linter devDeps for Bun scaffold with biome', () => {
+      const pkg = JSON.parse(generatePackageJson({ ...bunMockCtx, linter: 'biome' }));
+      expect(pkg.devDependencies).toHaveProperty('@biomejs/biome');
+    });
+
+    it('should include linter devDeps for Bun scaffold with eslint-prettier', () => {
+      const pkg = JSON.parse(generatePackageJson({ ...bunMockCtx, linter: 'eslint-prettier' }));
+      expect(pkg.devDependencies).toHaveProperty('eslint');
+      expect(pkg.devDependencies).toHaveProperty('prettier');
+    });
+
+    it('should include precommit devDeps for Bun scaffold with lefthook', () => {
+      const pkg = JSON.parse(generatePackageJson({ ...bunMockCtx, preCommit: 'lefthook' }));
+      expect(pkg.devDependencies).toHaveProperty('lefthook');
+    });
+
+    it('should include precommit devDeps for Bun scaffold with husky', () => {
+      const pkg = JSON.parse(generatePackageJson({ ...bunMockCtx, preCommit: 'husky' }));
+      expect(pkg.devDependencies).toHaveProperty('husky');
+    });
+
+    it('should include Ink and React deps for Bun scaffold', () => {
+      const pkg = JSON.parse(generatePackageJson(bunMockCtx));
+      expect(pkg.dependencies).toHaveProperty('ink');
+      expect(pkg.dependencies).toHaveProperty('react');
+    });
+  });
+
+  describe('Bun generateGitignore', () => {
+    it('should include bun.lock for Bun scaffold', () => {
+      const content = generateGitignore(bunMockCtx);
+      expect(content).toContain('bun.lock');
+    });
+
+    it('should not include bun.lock for Node scaffold', () => {
+      const content = generateGitignore(mockCtx);
+      expect(content).not.toContain('bun.lock');
+    });
+
+    it('should still ignore node_modules for Bun scaffold', () => {
+      const content = generateGitignore(bunMockCtx);
+      expect(content).toContain('node_modules/');
+    });
+  });
+
+  describe('Bun generateReadme', () => {
+    it('should show bun install instead of npm install', () => {
+      const content = generateReadme(bunMockCtx);
+      expect(content).toContain('bun install');
+      expect(content).not.toContain('npm install');
+    });
+
+    it('should show bun run dev instead of npm run dev', () => {
+      const content = generateReadme(bunMockCtx);
+      expect(content).toContain('bun run dev');
+    });
+
+    it('should show bun test instead of npm test', () => {
+      const content = generateReadme(bunMockCtx);
+      expect(content).toContain('bun test');
+    });
+  });
+
+  describe('Bun generateLefthookYml', () => {
+    it('should use bun commands for Bun scaffold', () => {
+      const content = generateLefthookYml(bunMockCtx);
+      expect(content).toContain('bun run typecheck');
+      expect(content).toContain('bun run lint');
+      expect(content).toContain('bun run format');
+    });
+
+    it('should use npm commands for Node scaffold', () => {
+      const content = generateLefthookYml(mockCtx);
+      expect(content).toContain('npm run typecheck');
+      expect(content).toContain('npm run lint');
+      expect(content).toContain('npm run format');
+    });
+  });
+
+  describe('Bun generateHuskyHook', () => {
+    it('should use bun test for Bun scaffold', () => {
+      const content = generateHuskyHook(bunMockCtx);
+      expect(content).toContain('bun test');
+    });
+
+    it('should use npm test for Node scaffold', () => {
+      const content = generateHuskyHook(mockCtx);
+      expect(content).toContain('npm test');
     });
   });
 });

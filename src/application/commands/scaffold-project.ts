@@ -36,6 +36,7 @@ import type { FileSystemPort, TemplateEnginePort } from '@/domain/repositories/p
 import { createProjectName } from '@/domain/value-objects/project-name';
 import type { Result } from '@/shared/errors/result';
 import { err, ok } from '@/shared/errors/result';
+import type { Runtime } from '@/shared/types';
 
 export type ScaffoldError =
   | { kind: 'invalid_name'; message: string }
@@ -59,7 +60,9 @@ export interface ScaffoldDeps {
   fs: FileSystemPort;
   templates: TemplateEnginePort;
   templatesDir: string;
-  checkRuntime: () => Result<string, { kind: 'runtime_not_found'; message: string }>;
+  checkRuntime: (
+    runtime: Runtime,
+  ) => Result<string, { kind: 'runtime_not_found'; message: string }>;
 }
 
 export type ScaffoldProject = (
@@ -102,8 +105,10 @@ const buildConfigEntries = (input: ScaffoldInput): ConfigEntry[] => {
   }
   // preCommit === 'none' → no hook config files
 
-  // Vitest config for Node scaffolds
-  entries.push({ filename: 'vitest.config.ts', generator: generateVitestConfig });
+  // Vitest config only for Node scaffolds — Bun uses built-in test runner
+  if (input.runtime !== 'bun') {
+    entries.push({ filename: 'vitest.config.ts', generator: generateVitestConfig });
+  }
 
   return entries;
 };
@@ -117,14 +122,22 @@ const getTemplateFiles = (language: string): string[] => {
   return ['source/app.tsx.template', 'source/cli.tsx.template', 'test.tsx.template'];
 };
 
-/** Get the template directory for a given language */
-const getTemplateDir = (language: string): string => {
-  return `node/${language}`;
+/** Get the template subdirectory for a given runtime and language. Validates against known values to prevent path traversal. */
+const getTemplateDir = (runtime: string, language: string): string => {
+  const VALID_RUNTIMES = ['node', 'bun'] as const;
+  const VALID_LANGUAGES = ['typescript', 'javascript'] as const;
+  if (!(VALID_RUNTIMES as readonly string[]).includes(runtime)) {
+    throw new Error(`Invalid runtime: ${runtime}`);
+  }
+  if (!(VALID_LANGUAGES as readonly string[]).includes(language)) {
+    throw new Error(`Invalid language: ${language}`);
+  }
+  return `${runtime}/${language}`;
 };
 
 export const makeScaffoldProject: ScaffoldProject = (deps) => (input) => {
   // 0. Check runtime is installed before any scaffolding
-  const runtimeResult = deps.checkRuntime();
+  const runtimeResult = deps.checkRuntime(input.runtime);
   if (!runtimeResult.ok) {
     return err({
       kind: 'runtime_not_found',
@@ -177,6 +190,7 @@ export const makeScaffoldProject: ScaffoldProject = (deps) => (input) => {
     projectName: projectName.value,
     projectVersion: '1.0.0',
     currentYear: String(new Date().getFullYear()),
+    runtime: input.runtime,
     language: input.language,
     linter: input.linter,
     preCommit: input.preCommit,
@@ -202,7 +216,7 @@ export const makeScaffoldProject: ScaffoldProject = (deps) => (input) => {
   }
 
   // 5. Process template files
-  const templateDir = `${deps.templatesDir}/${getTemplateDir(input.language)}`;
+  const templateDir = `${deps.templatesDir}/${getTemplateDir(input.runtime, input.language)}`;
   const templateFiles = getTemplateFiles(input.language);
 
   for (const templateFile of templateFiles) {
