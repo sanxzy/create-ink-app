@@ -16,6 +16,7 @@ const createMockDeps = () => {
     fileExists: vi.fn((_path: string) => false),
     copyFile: vi.fn((_src: string, _dest: string) => ({ ok: true, value: undefined })),
     readDirectory: vi.fn((_path: string) => ({ ok: true, value: [] })),
+    isWritable: vi.fn((_path: string) => true),
   };
 
   const mockTemplates: TemplateEnginePort = {

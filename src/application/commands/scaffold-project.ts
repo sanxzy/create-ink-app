@@ -43,7 +43,8 @@ export type ScaffoldError =
   | { kind: 'directory_exists'; message: string }
   | { kind: 'file_system'; message: string }
   | { kind: 'template_error'; message: string }
-  | { kind: 'runtime_not_found'; message: string };
+  | { kind: 'runtime_not_found'; message: string }
+  | { kind: 'not_writable'; message: string };
 
 export interface ScaffoldResult {
   projectDir: string;
@@ -155,9 +156,18 @@ export const makeScaffoldProject: ScaffoldProject = (deps) => (input) => {
   }
 
   const projectName = nameResult.value;
-  const targetDir = input.projectName; // Use original input as directory name
+  // Use targetDir if provided, otherwise use projectName (original input, not validated)
+  const targetDir = input.targetDir ?? input.projectName;
 
-  // 2. Check if directory exists
+  // 2. Check directory writability
+  if (!input.dryRun && !deps.fs.isWritable(targetDir)) {
+    return err({
+      kind: 'not_writable',
+      message: `Directory "${targetDir}" is not writable. Please check permissions.`,
+    });
+  }
+
+  // 3. Check if directory exists
   if (deps.fs.directoryExists(targetDir) && !input.overwrite) {
     return err({
       kind: 'directory_exists',
@@ -165,7 +175,7 @@ export const makeScaffoldProject: ScaffoldProject = (deps) => (input) => {
     });
   }
 
-  // 3. Create output directory
+  // 5. Create output directory
   if (!input.dryRun) {
     const mkdirResult = deps.fs.createDirectory(targetDir);
     if (!mkdirResult.ok) {

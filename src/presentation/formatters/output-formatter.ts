@@ -6,23 +6,63 @@
 
 import type { ScaffoldError, ScaffoldResult } from '@/application/commands/scaffold-project';
 import type { Result } from '@/shared/errors/result';
+import type { PackageManager, Runtime } from '@/shared/types';
 
-export const formatScaffoldSuccess = (result: ScaffoldResult): string => {
+export interface ScaffoldOptions {
+  runtime: Runtime;
+  packageManager: PackageManager;
+}
+
+/** Get the run command for a given runtime */
+export const getRunCommand = (runtime: Runtime): string => {
+  return runtime === 'bun' ? 'bun run dev' : 'npm run dev';
+};
+
+/** Get the install command for a given package manager */
+const getInstallCommand = (pm: PackageManager): string => {
+  switch (pm) {
+    case 'npm':
+      return 'npm install';
+    case 'pnpm':
+      return 'pnpm install';
+    case 'yarn':
+      return 'yarn';
+    case 'bun':
+      return 'bun install';
+  }
+};
+
+export const formatScaffoldSuccess = (
+  result: ScaffoldResult,
+  options?: ScaffoldOptions,
+): string => {
+  const runtime = options?.runtime ?? 'node';
+  const packageManager = options?.packageManager ?? 'npm';
+  const runCmd = getRunCommand(runtime);
+  const installCmd = getInstallCommand(packageManager);
+
+  const projectDirDisplay = result.projectDir === '.' ? 'Current directory' : result.projectDir;
+
   const lines: string[] = [
     '',
     '  ✓ Project created successfully!',
     '',
-    `  Project directory: ${result.projectDir}`,
+    `  Project: ${projectDirDisplay}`,
     '',
     '  Files created:',
     ...result.files.map((f) => `    • ${f}`),
     '',
     '  Next steps:',
-    `    cd ${result.projectDir}`,
-    '    npm install',
-    '    npm run dev',
-    '',
   ];
+
+  if (result.projectDir !== '.') {
+    lines.push(`    cd ${result.projectDir}`);
+  }
+
+  lines.push(`    ${installCmd}`);
+  lines.push(`    ${runCmd}`);
+  lines.push('');
+
   return lines.join('\n');
 };
 
@@ -37,6 +77,8 @@ export const formatScaffoldError = (error: ScaffoldError): string => {
     case 'template_error':
       return `  ✗ Template error: ${error.message}`;
     case 'runtime_not_found':
+      return `  ✗ ${error.message}`;
+    case 'not_writable':
       return `  ✗ ${error.message}`;
   }
 };
@@ -76,11 +118,34 @@ export const formatVersion = (version: string): string => {
 
 export const formatScaffoldResult = (
   result: Result<ScaffoldResult, ScaffoldError>,
+  options?: ScaffoldOptions,
 ): { text: string; exitCode: number } => {
   if (result.ok) {
-    return { text: formatScaffoldSuccess(result.value), exitCode: 0 };
+    return { text: formatScaffoldSuccess(result.value, options), exitCode: 0 };
   }
   return { text: formatScaffoldError(result.error), exitCode: 1 };
+};
+
+/**
+ * Format install instructions for non-immediate mode.
+ * Shown after scaffolding when --immediate is not used.
+ */
+export const formatInstallInstructions = (
+  packageManager: PackageManager,
+  runtime?: Runtime,
+): string => {
+  const installCmd = getInstallCommand(packageManager);
+  const lines: string[] = ['', '  📦 Next steps to get started:', '', `    ${installCmd}`];
+  if (runtime) {
+    lines.push(`    ${getRunCommand(runtime)}`);
+  }
+  lines.push('');
+  return lines.join('\n');
+};
+
+/** Format a message for cancelled operation */
+export const formatCancelMessage = (): string => {
+  return ['', '  ⚠ Operation cancelled.', '  No files were written.', ''].join('\n');
 };
 
 /** Format a message indicating auto-detection of non-interactive mode */

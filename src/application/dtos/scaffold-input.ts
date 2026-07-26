@@ -16,6 +16,8 @@ import type {
 
 export interface ScaffoldInput {
   projectName: string;
+  /** Target directory for scaffold output. Defaults to projectName when not set. */
+  targetDir?: string;
   runtime: Runtime;
   language: Language;
   linter: Linter;

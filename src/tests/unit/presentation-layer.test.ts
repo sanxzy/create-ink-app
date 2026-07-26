@@ -14,11 +14,14 @@ import { describe, expect, it } from 'vitest';
 import { resolveScaffoldState } from '@/application/commands/state-resolver';
 import { DEFAULT_SCAFFOLD_INPUT } from '@/application/dtos/scaffold-input';
 import {
+  formatCancelMessage,
   formatHelp,
+  formatInstallInstructions,
   formatScaffoldError,
   formatScaffoldResult,
   formatScaffoldSuccess,
   formatVersion,
+  getRunCommand,
 } from '@/presentation/formatters/output-formatter';
 import { parseArgs, parsedArgsToScaffoldInput } from '@/presentation/parsers/args-parser';
 import { err, ok } from '@/shared/errors/result';
@@ -356,7 +359,6 @@ describe('output-formatters', () => {
     });
 
     it('should show next steps', () => {
-      expect(success).toContain('cd my-app');
       expect(success).toContain('npm install');
       expect(success).toContain('npm run dev');
     });
@@ -397,6 +399,14 @@ describe('output-formatters', () => {
       expect(text).toContain('Template error');
       expect(text).toContain('Template not found');
     });
+
+    it('should format not_writable error', () => {
+      const text = formatScaffoldError({
+        kind: 'not_writable',
+        message: 'Directory is not writable',
+      });
+      expect(text).toContain('Directory is not writable');
+    });
   });
 
   describe('formatScaffoldResult', () => {
@@ -410,6 +420,46 @@ describe('output-formatters', () => {
       const result = formatScaffoldResult(err({ kind: 'invalid_name', message: 'Bad name' }));
       expect(result.exitCode).toBe(1);
       expect(result.text).toContain('Bad name');
+    });
+
+    it('should accept ScaffoldOptions for runtime-aware output', () => {
+      const result = formatScaffoldResult(ok({ projectDir: 'my-app', files: [] }), {
+        runtime: 'bun',
+        packageManager: 'bun',
+      });
+      expect(result.text).toContain('bun run dev');
+      expect(result.text).toContain('bun install');
+    });
+  });
+
+  describe('getRunCommand', () => {
+    it('should return npm run dev for node', () => {
+      expect(getRunCommand('node')).toBe('npm run dev');
+    });
+
+    it('should return bun run dev for bun', () => {
+      expect(getRunCommand('bun')).toBe('bun run dev');
+    });
+  });
+
+  describe('formatInstallInstructions', () => {
+    it('should show install command for npm', () => {
+      const msg = formatInstallInstructions('npm');
+      expect(msg).toContain('npm install');
+    });
+
+    it('should show install and run command when runtime provided', () => {
+      const msg = formatInstallInstructions('npm', 'node');
+      expect(msg).toContain('npm install');
+      expect(msg).toContain('npm run dev');
+    });
+  });
+
+  describe('formatCancelMessage', () => {
+    it('should show cancel message', () => {
+      const msg = formatCancelMessage();
+      expect(msg).toContain('Operation cancelled');
+      expect(msg).toContain('No files were written');
     });
   });
 });

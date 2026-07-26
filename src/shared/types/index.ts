@@ -20,6 +20,9 @@ export type TestFramework = 'vitest' | 'jest';
 /** Supported package managers */
 export type PackageManager = 'npm' | 'pnpm' | 'yarn' | 'bun';
 
+/** Overwrite mode for existing directories */
+export type OverwriteMode = 'ask' | 'yes' | 'no';
+
 /** Full resolved scaffold configuration */
 export interface ScaffoldConfig {
   projectName: string;

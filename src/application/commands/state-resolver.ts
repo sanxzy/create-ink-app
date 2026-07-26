@@ -26,6 +26,7 @@ export const resolveScaffoldState = (
 ): ScaffoldInput => {
   return {
     projectName: flags.projectName ?? defaults.projectName,
+    targetDir: flags.targetDir ?? defaults.targetDir,
     runtime: flags.runtime ?? defaults.runtime,
     language: flags.language ?? defaults.language,
     linter: flags.linter ?? defaults.linter,
