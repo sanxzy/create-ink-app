@@ -1,5 +1,5 @@
 {
-  "name": "create-ink-app",
+  "name": "@xzy-ai/create-ink-app",
   "version": "0.1.0",
   "description": "Scaffold a complete, runnable Ink React project",
   "type": "module",
