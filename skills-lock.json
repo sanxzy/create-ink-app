@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "skills": {
+    "discussion": {
+      "source": "sanxzy/skills",
+      "sourceType": "github",
+      "skillPath": "discussion/SKILL.md",
+      "computedHash": "df2f3de8fa4e8f598917217adeba27e9ba885803eb55b3c4c7fdedd94a997790"
+    },
+    "dispatch-for-implementation": {
+      "source": "sanxzy/skills",
+      "sourceType": "github",
+      "skillPath": "dispatch-for-implementation/SKILL.md",
+      "computedHash": "296b345b5c8c1bf4bd2895daa4fc980dca146a063c55b0a25d9ad2ac28215947"
+    },
+    "generate-architecture": {
+      "source": "sanxzy/skills",
+      "sourceType": "github",
+      "skillPath": "generate-architecture/SKILL.md",
+      "computedHash": "d235d39450616320ec8fc32b2c1b3aef47eb03511214cc86e9c4a38fd99e4099"
+    },
+    "generate-design-md": {
+      "source": "sanxzy/skills",
+      "sourceType": "github",
+      "skillPath": "generate-design-md/SKILL.md",
+      "computedHash": "747c2cab6800b51da9333ae03c99ed753c677f3baf0228566a0b8cfacd05aa5b"
+    },
+    "generate-engineering-specs": {
+      "source": "sanxzy/skills",
+      "sourceType": "github",
+      "skillPath": "generate-engineering-specs/SKILL.md",
+      "computedHash": "58330adbb5f13c906dadc8aae440adf3d3804c70b847a1efcb699be7c85fc2c6"
+    },
+    "generate-tickets": {
+      "source": "sanxzy/skills",
+      "sourceType": "github",
+      "skillPath": "generate-tickets/SKILL.md",
+      "computedHash": "9f1ad4a64e4bc093a736ed04180ac8b7583a6049abde15e649e3215427fa8d20"
+    },
+    "install-bundled-agents": {
+      "source": "sanxzy/skills",
+      "sourceType": "github",
+      "skillPath": "install-bundled-agents/SKILL.md",
+      "computedHash": "8871e2e35eacccaf1e3769ab98cdd7a3f47b2e9b7186f1c09223bc3884859097"
+    }
+  }
+}

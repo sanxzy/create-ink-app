@@ -1,0 +1,44 @@
+status: success
+confidence: 95
+deliverables:
+  requirements: requirements.md
+  problem_statement: "Developers building Ink terminal applications face an outdated, rigid scaffolding experience. The existing create-ink-app (v3.0.2, 2023-era) hardcodes npm as the only package manager, Babel for transpilation, ava for testing, and xo for linting — all stale choices. It offers no interactive wizard (only a project name + optional --typescript flag), supports only Node.js (no Bun), has no non-interactive mode for CI/CD or AI agents, and provides no post-scaffold runtime-aware guidance. The dependency chain is unmaintained (listr last published 2019). Developers must either accept a legacy scaffold and manually upgrade, or start from scratch — neither is a good experience."
+  solution: "Build @xzy-ai/create-ink-app, a modern interactive project wizard for scaffolding professional Ink terminal applications. Users run `npx @xzy-ai/create-ink-app` and are guided through a wizard (project name → runtime → package manager → language → linter/formatter → test framework → pre-commit hooks → bun compile option → install). The tool uses mri + @clack/prompts + picocolors (create-vite pattern), supports Node.js and Bun runtimes, auto-detects package manager from npm_config_user_agent, scaffolds with Ink v7+ and React 19+ (latest only), uses a hybrid template architecture (base templates + programmatic config generation), provides full non-interactive mode with CLI flags, detects AI agents via @vercel/detect-agent, and displays runtime-aware post-scaffold instructions."
+  user_stories:
+    - "As a developer, I want to run `npx @xzy-ai/create-ink-app` with no arguments, so that the interactive wizard starts immediately in a TTY terminal."
+    - "As a developer, I want to select between Node.js and Bun as my runtime, so that the scaffolded project uses the appropriate build system and test framework."
+    - "As a developer, I want my package manager to be auto-detected from npm_config_user_agent, so that I don't need to manually select it."
+    - "As a developer, I want to run --no-interactive with CLI flags, so that I can scaffold in CI/CD pipelines."
+    - "As a developer, I want runtime-aware post-scaffold instructions, so that I know the correct command to start my project."
+    - "As a developer, I want --dry-run to preview the scaffold without writing files, so that I can verify before committing."
+    - "As a developer, I want the tool to validate that my chosen runtime is installed, so that I don't get errors after scaffolding."
+  out_of_scope:
+    - "Deno runtime support (node:tty incompatibility)"
+    - "CI/CD configuration scaffolding"
+    - "Ink version selection (always latest)"
+    - "Remote template fetching (bundled in package)"
+    - "Component generators (generate after scaffold)"
+    - "Project upgrade/migration tools"
+    - "Plugin system"
+    - "Multi-project workspace scaffolding (monorepos)"
+    - "Deployment configuration"
+    - "Backward compatibility with old create-ink-app v3.0.2"
+missing_information: []
+assumptions:
+  - "Node.js ≥20 is minimum; Node v24 LTS is target"
+  - "mri + @clack/prompts + picocolors is the CLI stack"
+  - "npm_config_user_agent is set in all standard invocations"
+  - "ink-testing-library v4 is compatible with both vitest and bun:test"
+  - "Simple <% VAR %> template substitution is sufficient"
+  - "Biome v1.9+ provides sufficient lint rules to replace ESLint+Prettier"
+  - "E2E testing of 8-10 combos provides sufficient coverage"
+  - "Internet access available for dependency installation"
+  - "Git is installed if user selects pre-commit hooks"
+questions_for_user: []
+blocking_issues: []
+recommendations:
+  - "Architecture: Use create-vite single-file src/index.ts pattern with mri + @clack/prompts"
+  - "Architecture: Template directory: templates/<runtime>/<language>/ for base files"
+  - "Architecture: Account for stdin.write() bug by extracting input handlers in test templates"
+  - "Architecture: Handle Windows path separators"
+  - "Architecture: engines.node >=20 in scaffolded projects, target v24 for tool dev"

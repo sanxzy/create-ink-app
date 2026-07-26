@@ -1,0 +1,22 @@
+status: success
+confidence: 96
+deliverables:
+  ticket_file: ticket.md
+  ticket_count: 6
+  assembly_report: tickets/assembly-report.md
+  consistency_issues:
+    - "User-provided ticket summary mentioned Ticket 2 as having '7 criteria' but the planning output YAML contains 8 criteria — resolved by using YAML data as authoritative; all 8 criteria included in ticket 02"
+    - "User-provided ticket summary mentioned Ticket 4 as having '7 criteria' but the planning output YAML contains 8 criteria — resolved by using YAML data as authoritative; all 8 criteria included in ticket 04"
+missing_information: []
+assumptions:
+  - "Planning output YAML (planning-output.yaml) is the authoritative source for ticket data over the inline summary in the user input"
+  - "Original planning output ticket order is used as stable sort for parallelizable tickets (03, 04, 05 have no interdependencies but preserve their planning output order)"
+  - "Tickets 03, 04, and 05 are all blocked by Tickets 01 and 02 as specified in both the plan and the YAML"
+questions_for_user: []
+blocking_issues: []
+recommendations:
+  - "Start with Ticket 01 — the tracer bullet that validates the entire architecture and unblocks all downstream tickets"
+  - "Execute Ticket 02 next — it depends only on Ticket 01 and unblocks Tickets 03, 04, and 05"
+  - "Fan out Tickets 03, 04, and 05 in parallel after Tickets 01 and 02 complete — they have no interdependencies"
+  - "Finish with Ticket 06 (E2E validation) after all feature tickets are complete"
+  - "Use the dispatch-for-implementation skill for parallel execution of Tickets 03/04/05"
