@@ -1,0 +1,1 @@
+{"version":3,"file":"scaffold-input.js","sourceRoot":"","sources":["../../../src/application/dtos/scaffold-input.ts"],"names":[],"mappings":"AAAA;;;;;GAKG;AAcH,wCAAwC;AACxC,MAAM,CAAC,MAAM,sBAAsB,GAAkB;IACnD,WAAW,EAAE,EAAE;IACf,OAAO,EAAE,MAAM;IACf,QAAQ,EAAE,YAAY;IACtB,MAAM,EAAE,OAAO;IACf,SAAS,EAAE,UAAU;IACrB,SAAS,EAAE,KAAK;IAChB,MAAM,EAAE,KAAK;CACd,CAAC"}
