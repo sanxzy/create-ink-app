@@ -11,7 +11,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-
+import { resolveScaffoldState } from '@/application/commands/state-resolver';
+import { DEFAULT_SCAFFOLD_INPUT } from '@/application/dtos/scaffold-input';
 import {
   formatHelp,
   formatScaffoldError,
@@ -81,6 +82,66 @@ describe('parseArgs', () => {
     const result = parseArgs({ _: ['my-app', 'extra', 'args'] });
     expect(result.unknownArgs).toEqual(['extra', 'args']);
   });
+
+  // New flag tests for WU-02
+  it('should parse --runtime flag', () => {
+    const result = parseArgs({ _: [], runtime: 'bun' });
+    expect(result.runtime).toBe('bun');
+  });
+
+  it('should parse --language flag', () => {
+    const result = parseArgs({ _: [], language: 'javascript' });
+    expect(result.language).toBe('javascript');
+  });
+
+  it('should parse --linter flag', () => {
+    const result = parseArgs({ _: [], linter: 'eslint-prettier' });
+    expect(result.linter).toBe('eslint-prettier');
+  });
+
+  it('should parse --test flag', () => {
+    const result = parseArgs({ _: [], test: 'vitest' });
+    expect(result.testFramework).toBe('vitest');
+  });
+
+  it('should parse --precommit flag', () => {
+    const result = parseArgs({ _: [], precommit: 'husky' });
+    expect(result.preCommit).toBe('husky');
+  });
+
+  it('should parse --pm flag', () => {
+    const result = parseArgs({ _: [], pm: 'pnpm' });
+    expect(result.packageManager).toBe('pnpm');
+  });
+
+  it('should parse --no-overwrite flag', () => {
+    const result = parseArgs({ _: [], 'no-overwrite': true });
+    expect(result.overwrite).toBe(false);
+    expect(result.noOverwrite).toBe(true);
+  });
+
+  it('should parse --immediate flag', () => {
+    const result = parseArgs({ _: [], immediate: true });
+    expect(result.immediate).toBe(true);
+  });
+
+  it('should use --no-overwrite to override --overwrite when both passed', () => {
+    // When both overwrite and no-overwrite are true, no-overwrite wins
+    const result = parseArgs({ _: [], overwrite: true, 'no-overwrite': true });
+    expect(result.overwrite).toBe(false);
+  });
+
+  it('should default new flags when not provided', () => {
+    const result = parseArgs({ _: ['my-app'] });
+    expect(result.runtime).toBe('');
+    expect(result.language).toBe('');
+    expect(result.linter).toBe('');
+    expect(result.testFramework).toBe('');
+    expect(result.preCommit).toBe('');
+    expect(result.packageManager).toBe('');
+    expect(result.noOverwrite).toBe(false);
+    expect(result.immediate).toBe(false);
+  });
 });
 
 describe('parsedArgsToScaffoldInput', () => {
@@ -90,13 +151,23 @@ describe('parsedArgsToScaffoldInput', () => {
       version: false,
       noInteractive: true,
       overwrite: false,
+      noOverwrite: false,
       dryRun: false,
+      immediate: false,
       projectName: 'my-app',
+      runtime: '',
+      language: '',
+      linter: '',
+      testFramework: '',
+      preCommit: '',
+      packageManager: '',
       unknownArgs: [],
     });
     expect(result.projectName).toBe('my-app');
     expect(result.runtime).toBe('node');
     expect(result.language).toBe('typescript');
+    expect(result.linter).toBe('biome');
+    expect(result.preCommit).toBe('lefthook');
     expect(result.dryRun).toBe(false);
     expect(result.overwrite).toBe(false);
   });
@@ -107,12 +178,46 @@ describe('parsedArgsToScaffoldInput', () => {
       version: false,
       noInteractive: false,
       overwrite: true,
+      noOverwrite: false,
       dryRun: true,
+      immediate: false,
       projectName: 'my-app',
+      runtime: '',
+      language: '',
+      linter: '',
+      testFramework: '',
+      preCommit: '',
+      packageManager: '',
       unknownArgs: [],
     });
     expect(result.overwrite).toBe(true);
     expect(result.dryRun).toBe(true);
+  });
+
+  it('should propagate provided flags into the scaffold input', () => {
+    const result = parsedArgsToScaffoldInput({
+      help: false,
+      version: false,
+      noInteractive: false,
+      overwrite: true,
+      noOverwrite: false,
+      dryRun: false,
+      immediate: false,
+      projectName: 'my-app',
+      runtime: 'bun',
+      language: 'javascript',
+      linter: 'none',
+      testFramework: 'vitest',
+      preCommit: 'none',
+      packageManager: 'pnpm',
+      unknownArgs: [],
+    });
+    expect(result.runtime).toBe('bun');
+    expect(result.language).toBe('javascript');
+    expect(result.linter).toBe('none');
+    expect(result.testFramework).toBe('vitest');
+    expect(result.preCommit).toBe('none');
+    expect(result.packageManager).toBe('pnpm');
   });
 
   it('should default project name to empty string when not provided', () => {
@@ -121,11 +226,77 @@ describe('parsedArgsToScaffoldInput', () => {
       version: false,
       noInteractive: false,
       overwrite: false,
+      noOverwrite: false,
       dryRun: false,
+      immediate: false,
       projectName: '',
+      runtime: '',
+      language: '',
+      linter: '',
+      testFramework: '',
+      preCommit: '',
+      packageManager: '',
       unknownArgs: [],
     });
     expect(result.projectName).toBe('');
+  });
+});
+
+describe('parsedArgsToScaffoldInput with resolveScaffoldState', () => {
+  it('should override defaults with provided flags', () => {
+    const partial = parsedArgsToScaffoldInput({
+      help: false,
+      version: false,
+      noInteractive: false,
+      overwrite: true,
+      noOverwrite: false,
+      dryRun: false,
+      immediate: false,
+      projectName: 'my-app',
+      runtime: 'bun',
+      language: 'javascript',
+      linter: 'eslint-prettier',
+      testFramework: 'vitest',
+      preCommit: 'husky',
+      packageManager: 'pnpm',
+      unknownArgs: [],
+    });
+    const result = resolveScaffoldState(partial, DEFAULT_SCAFFOLD_INPUT);
+    expect(result.projectName).toBe('my-app');
+    expect(result.runtime).toBe('bun');
+    expect(result.language).toBe('javascript');
+    expect(result.linter).toBe('eslint-prettier');
+    expect(result.preCommit).toBe('husky');
+    expect(result.packageManager).toBe('pnpm');
+    expect(result.overwrite).toBe(true);
+  });
+
+  it('should use defaults for values not provided', () => {
+    const partial = parsedArgsToScaffoldInput({
+      help: false,
+      version: false,
+      noInteractive: true,
+      overwrite: false,
+      noOverwrite: false,
+      dryRun: false,
+      immediate: false,
+      projectName: 'my-app',
+      runtime: '',
+      language: '',
+      linter: '',
+      testFramework: '',
+      preCommit: '',
+      packageManager: '',
+      unknownArgs: [],
+    });
+    const result = resolveScaffoldState(partial, DEFAULT_SCAFFOLD_INPUT);
+    expect(result.projectName).toBe('my-app');
+    expect(result.runtime).toBe('node');
+    expect(result.language).toBe('typescript');
+    expect(result.linter).toBe('biome');
+    expect(result.preCommit).toBe('lefthook');
+    expect(result.packageManager).toBe('npm');
+    expect(result.installDeps).toBe(true);
   });
 });
 
@@ -144,6 +315,14 @@ describe('output-formatters', () => {
       expect(helpText).toContain('--no-interactive');
       expect(helpText).toContain('--overwrite');
       expect(helpText).toContain('--dry-run');
+      expect(helpText).toContain('--runtime');
+      expect(helpText).toContain('--language');
+      expect(helpText).toContain('--linter');
+      expect(helpText).toContain('--test');
+      expect(helpText).toContain('--precommit');
+      expect(helpText).toContain('--pm');
+      expect(helpText).toContain('--no-overwrite');
+      expect(helpText).toContain('--immediate');
     });
   });
 
