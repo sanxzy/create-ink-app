@@ -229,6 +229,7 @@ var generatePackageJson = (ctx) => {
   if (!isBun) {
     devDependencies.vitest = "^4.1.0";
   }
+  devDependencies["ink-testing-library"] = "^4.0.0";
   return JSON.stringify({
     name: ctx.projectName,
     version: ctx.projectVersion,
@@ -10332,7 +10333,7 @@ var runCreateApp = async (scaffoldProject, options) => {
 // package.json
 var package_default = {
   name: "@xzy-ai/create-ink-app",
-  version: "0.1.7",
+  version: "0.1.8",
   description: "Scaffold a complete, runnable Ink React project",
   type: "module",
   bin: {

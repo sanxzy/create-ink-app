@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect } from 'vitest';
-import { render } from 'ink';
+import { render } from 'ink-testing-library';
 import App from './app.js';
 
 describe('App', () => {
@@ -11,7 +11,6 @@ describe('App', () => {
 
   it('should show the project name', () => {
     const { lastFrame } = render(<App name="<% PROJECT_NAME %>" />);
-    const frame = lastFrame();
-    expect(frame).toContain('<% PROJECT_NAME %>');
+    expect(lastFrame()).toContain('<% PROJECT_NAME %>');
   });
 });

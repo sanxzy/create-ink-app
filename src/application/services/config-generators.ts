@@ -84,6 +84,9 @@ export const generatePackageJson = (ctx: GeneratorContext): string => {
     devDependencies.vitest = '^4.1.0';
   }
 
+  // ink-testing-library for testing — always needed
+  devDependencies['ink-testing-library'] = '^4.0.0';
+
   return JSON.stringify(
     {
       name: ctx.projectName,
