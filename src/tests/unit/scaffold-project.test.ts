@@ -32,7 +32,14 @@ const createMockDeps = () => {
     getOutputFilename: vi.fn((filename: string) => filename.replace('.template', '')),
   };
 
-  return { fs: mockFs, templates: mockTemplates, templatesDir: 'templates' };
+  const mockCheckRuntime = vi.fn(() => ({ ok: true, value: 'v18.0.0' }));
+
+  return {
+    fs: mockFs,
+    templates: mockTemplates,
+    templatesDir: 'templates',
+    checkRuntime: mockCheckRuntime,
+  };
 };
 
 const createValidInput = (overrides?: Partial<ScaffoldInput>): ScaffoldInput => ({
@@ -41,6 +48,9 @@ const createValidInput = (overrides?: Partial<ScaffoldInput>): ScaffoldInput => 
   language: 'typescript',
   linter: 'biome',
   preCommit: 'lefthook',
+  testFramework: 'vitest',
+  packageManager: 'npm',
+  installDeps: true,
   overwrite: false,
   dryRun: false,
   ...overrides,
@@ -54,6 +64,8 @@ describe('makeScaffoldProject', () => {
     deps = createMockDeps();
     scaffold = makeScaffoldProject(deps);
   });
+
+  // === Basic functionality ===
 
   it('should scaffold a project with valid input', () => {
     const result = scaffold(createValidInput());
@@ -103,14 +115,6 @@ describe('makeScaffoldProject', () => {
     expect(writtenPaths).toContain('my-test-app/package.json');
   });
 
-  it('should include tsconfig.json in written files', () => {
-    scaffold(createValidInput());
-    const writtenPaths = (deps.fs.writeFile as ReturnType<typeof vi.fn>).mock.calls.map(
-      (call: [string]) => call[0],
-    );
-    expect(writtenPaths).toContain('my-test-app/tsconfig.json');
-  });
-
   it('should fail when directory exists and overwrite is false', () => {
     deps.fs.directoryExists = vi.fn(() => true);
     const result = scaffold(createValidInput());
@@ -126,6 +130,32 @@ describe('makeScaffoldProject', () => {
     expect(result.ok).toBe(true);
   });
 
+  it('should process template files', () => {
+    scaffold(createValidInput());
+    expect(deps.templates.processTemplateFile).toHaveBeenCalled();
+  });
+
+  // === Runtime validation ===
+
+  it('should check runtime before scaffolding', () => {
+    scaffold(createValidInput());
+    expect(deps.checkRuntime).toHaveBeenCalled();
+  });
+
+  it('should fail when runtime check fails', () => {
+    deps.checkRuntime = vi.fn(() => ({
+      ok: false,
+      error: { kind: 'runtime_not_found', message: 'Node.js is not installed' },
+    }));
+    const result = scaffold(createValidInput());
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.kind).toBe('runtime_not_found');
+    }
+  });
+
+  // === Dry-run mode ===
+
   it('should not write files in dry-run mode', () => {
     scaffold(createValidInput({ dryRun: true }));
     expect(deps.fs.createDirectory).not.toHaveBeenCalled();
@@ -140,8 +170,308 @@ describe('makeScaffoldProject', () => {
     }
   });
 
-  it('should process template files', () => {
-    scaffold(createValidInput());
-    expect(deps.templates.processTemplateFile).toHaveBeenCalled();
+  it('should check runtime even in dry-run mode', () => {
+    scaffold(createValidInput({ dryRun: true }));
+    // Runtime check should still happen before anything
+    expect(deps.checkRuntime).toHaveBeenCalled();
   });
+
+  // === TypeScript scaffold (default) ===
+
+  it('should include tsconfig.json for TypeScript scaffold', () => {
+    scaffold(createValidInput({ language: 'typescript' }));
+    const writtenPaths = (deps.fs.writeFile as ReturnType<typeof vi.fn>).mock.calls.map(
+      (call: [string]) => call[0],
+    );
+    expect(writtenPaths).toContain('my-test-app/tsconfig.json');
+  });
+
+  it('should include biome.json for biome linter', () => {
+    scaffold(createValidInput({ linter: 'biome' }));
+    const writtenPaths = (deps.fs.writeFile as ReturnType<typeof vi.fn>).mock.calls.map(
+      (call: [string]) => call[0],
+    );
+    expect(writtenPaths).toContain('my-test-app/biome.json');
+  });
+
+  it('should include lefthook.yml for lefthook precommit', () => {
+    scaffold(createValidInput({ preCommit: 'lefthook' }));
+    const writtenPaths = (deps.fs.writeFile as ReturnType<typeof vi.fn>).mock.calls.map(
+      (call: [string]) => call[0],
+    );
+    expect(writtenPaths).toContain('my-test-app/lefthook.yml');
+  });
+
+  // === JavaScript scaffold ===
+
+  it('should not include tsconfig.json for JavaScript scaffold', () => {
+    scaffold(createValidInput({ language: 'javascript' }));
+    const writtenPaths = (deps.fs.writeFile as ReturnType<typeof vi.fn>).mock.calls.map(
+      (call: [string]) => call[0],
+    );
+    expect(writtenPaths).not.toContain('my-test-app/tsconfig.json');
+  });
+
+  it('should use JS template directory for JavaScript scaffold', () => {
+    scaffold(createValidInput({ language: 'javascript' }));
+    // Template calls should use javascript directory
+    const templatePaths = (
+      deps.templates.processTemplateFile as ReturnType<typeof vi.fn>
+    ).mock.calls.map((call: [string]) => call[0]);
+    for (const path of templatePaths) {
+      expect(path).toContain('node/javascript');
+    }
+  });
+
+  it('should use TS template directory for TypeScript scaffold', () => {
+    scaffold(createValidInput({ language: 'typescript' }));
+    const templatePaths = (
+      deps.templates.processTemplateFile as ReturnType<typeof vi.fn>
+    ).mock.calls.map((call: [string]) => call[0]);
+    for (const path of templatePaths) {
+      expect(path).toContain('node/typescript');
+    }
+  });
+
+  // === ESLint+Prettier ===
+
+  it('should include eslint.config.js for eslint-prettier linter', () => {
+    scaffold(createValidInput({ linter: 'eslint-prettier' }));
+    const writtenPaths = (deps.fs.writeFile as ReturnType<typeof vi.fn>).mock.calls.map(
+      (call: [string]) => call[0],
+    );
+    expect(writtenPaths).toContain('my-test-app/eslint.config.js');
+  });
+
+  it('should include .prettierrc for eslint-prettier linter', () => {
+    scaffold(createValidInput({ linter: 'eslint-prettier' }));
+    const writtenPaths = (deps.fs.writeFile as ReturnType<typeof vi.fn>).mock.calls.map(
+      (call: [string]) => call[0],
+    );
+    expect(writtenPaths).toContain('my-test-app/.prettierrc');
+  });
+
+  it('should not include biome.json for eslint-prettier linter', () => {
+    scaffold(createValidInput({ linter: 'eslint-prettier' }));
+    const writtenPaths = (deps.fs.writeFile as ReturnType<typeof vi.fn>).mock.calls.map(
+      (call: [string]) => call[0],
+    );
+    expect(writtenPaths).not.toContain('my-test-app/biome.json');
+  });
+
+  // === Husky ===
+
+  it('should include .husky/pre-commit for husky precommit', () => {
+    scaffold(createValidInput({ preCommit: 'husky' }));
+    const writtenPaths = (deps.fs.writeFile as ReturnType<typeof vi.fn>).mock.calls.map(
+      (call: [string]) => call[0],
+    );
+    expect(writtenPaths).toContain('my-test-app/.husky/pre-commit');
+  });
+
+  it('should not include lefthook.yml for husky precommit', () => {
+    scaffold(createValidInput({ preCommit: 'husky' }));
+    const writtenPaths = (deps.fs.writeFile as ReturnType<typeof vi.fn>).mock.calls.map(
+      (call: [string]) => call[0],
+    );
+    expect(writtenPaths).not.toContain('my-test-app/lefthook.yml');
+  });
+
+  // === None options ===
+
+  it('should not include any linter config when linter is none', () => {
+    scaffold(createValidInput({ linter: 'none' }));
+    const writtenPaths = (deps.fs.writeFile as ReturnType<typeof vi.fn>).mock.calls.map(
+      (call: [string]) => call[0],
+    );
+    expect(writtenPaths).not.toContain('my-test-app/biome.json');
+    expect(writtenPaths).not.toContain('my-test-app/eslint.config.js');
+    expect(writtenPaths).not.toContain('my-test-app/.prettierrc');
+  });
+
+  it('should not include any precommit config when precommit is none', () => {
+    scaffold(createValidInput({ preCommit: 'none' }));
+    const writtenPaths = (deps.fs.writeFile as ReturnType<typeof vi.fn>).mock.calls.map(
+      (call: [string]) => call[0],
+    );
+    expect(writtenPaths).not.toContain('my-test-app/lefthook.yml');
+    expect(writtenPaths).not.toContain('my-test-app/.husky/pre-commit');
+  });
+
+  // === Vitest config ===
+
+  it('should include vitest.config.ts for Node scaffolds', () => {
+    scaffold(createValidInput({ runtime: 'node' }));
+    const writtenPaths = (deps.fs.writeFile as ReturnType<typeof vi.fn>).mock.calls.map(
+      (call: [string]) => call[0],
+    );
+    expect(writtenPaths).toContain('my-test-app/vitest.config.ts');
+  });
+
+  // === File count checks ===
+
+  it('should create correct number of files for default TS+Biome+Lefthook', () => {
+    const result = scaffold(
+      createValidInput({
+        language: 'typescript',
+        linter: 'biome',
+        preCommit: 'lefthook',
+      }),
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      // Always: package.json, compat.json, .gitignore, .editorconfig, readme.md, LICENSE, vitest.config.ts
+      // TS: tsconfig.json
+      // Biome: biome.json
+      // Lefthook: lefthook.yml
+      // Templates: source/app.tsx, source/cli.tsx, test.tsx
+      // Total: 7 always + 1 ts + 1 biome + 1 lefthook + 3 templates = 13
+      expect(result.value.files).toHaveLength(13);
+    }
+  });
+
+  it('should create correct number of files for JS+ESLint+Husky', () => {
+    const result = scaffold(
+      createValidInput({
+        language: 'javascript',
+        linter: 'eslint-prettier',
+        preCommit: 'husky',
+      }),
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      // Always: package.json, compat.json, .gitignore, .editorconfig, readme.md, LICENSE, vitest.config.ts
+      // ESLint+Prettier: eslint.config.js, .prettierrc
+      // Husky: .husky/pre-commit
+      // Templates: source/app.jsx, source/cli.jsx, test.jsx
+      // Total: 7 always + 2 eslint-prettier + 1 husky + 3 templates = 13
+      expect(result.value.files).toHaveLength(13);
+    }
+  });
+
+  it('should create correct number of files for JS+none+none', () => {
+    const result = scaffold(
+      createValidInput({
+        language: 'javascript',
+        linter: 'none',
+        preCommit: 'none',
+      }),
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      // Always: package.json, compat.json, .gitignore, .editorconfig, readme.md, LICENSE, vitest.config.ts
+      // None linter: nothing
+      // None precommit: nothing
+      // Templates: source/app.jsx, source/cli.jsx, test.jsx
+      // Total: 7 always + 3 templates = 10
+      expect(result.value.files).toHaveLength(10);
+    }
+  });
+
+  it('should create correct number of files for TS+none+none', () => {
+    const result = scaffold(
+      createValidInput({
+        language: 'typescript',
+        linter: 'none',
+        preCommit: 'none',
+      }),
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      // Always: package.json, compat.json, .gitignore, .editorconfig, readme.md, LICENSE, vitest.config.ts
+      // TS: tsconfig.json
+      // None linter: nothing
+      // None precommit: nothing
+      // Templates: source/app.tsx, source/cli.tsx, test.tsx
+      // Total: 7 always + 1 ts + 3 templates = 11
+      expect(result.value.files).toHaveLength(11);
+    }
+  });
+
+  // === Combination tests ===
+
+  const combinations: Array<{
+    name: string;
+    input: Partial<ScaffoldInput>;
+    shouldInclude: string[];
+    shouldExclude: string[];
+  }> = [
+    {
+      name: 'TS+Biome+Lefthook (default)',
+      input: { language: 'typescript', linter: 'biome', preCommit: 'lefthook' },
+      shouldInclude: ['tsconfig.json', 'biome.json', 'lefthook.yml'],
+      shouldExclude: ['eslint.config.js', '.prettierrc', '.husky/pre-commit'],
+    },
+    {
+      name: 'TS+Biome+Husky',
+      input: { language: 'typescript', linter: 'biome', preCommit: 'husky' },
+      shouldInclude: ['tsconfig.json', 'biome.json', '.husky/pre-commit'],
+      shouldExclude: ['eslint.config.js', '.prettierrc', 'lefthook.yml'],
+    },
+    {
+      name: 'TS+ESLint+Lefthook',
+      input: { language: 'typescript', linter: 'eslint-prettier', preCommit: 'lefthook' },
+      shouldInclude: ['tsconfig.json', 'eslint.config.js', '.prettierrc', 'lefthook.yml'],
+      shouldExclude: ['biome.json', '.husky/pre-commit'],
+    },
+    {
+      name: 'TS+ESLint+Husky',
+      input: { language: 'typescript', linter: 'eslint-prettier', preCommit: 'husky' },
+      shouldInclude: ['tsconfig.json', 'eslint.config.js', '.prettierrc', '.husky/pre-commit'],
+      shouldExclude: ['biome.json', 'lefthook.yml'],
+    },
+    {
+      name: 'JS+Biome+Lefthook',
+      input: { language: 'javascript', linter: 'biome', preCommit: 'lefthook' },
+      shouldInclude: ['biome.json', 'lefthook.yml'],
+      shouldExclude: ['tsconfig.json', 'eslint.config.js', '.prettierrc', '.husky/pre-commit'],
+    },
+    {
+      name: 'JS+ESLint+Husky',
+      input: { language: 'javascript', linter: 'eslint-prettier', preCommit: 'husky' },
+      shouldInclude: ['eslint.config.js', '.prettierrc', '.husky/pre-commit'],
+      shouldExclude: ['tsconfig.json', 'biome.json', 'lefthook.yml'],
+    },
+    {
+      name: 'TS+none+none',
+      input: { language: 'typescript', linter: 'none', preCommit: 'none' },
+      shouldInclude: ['tsconfig.json'],
+      shouldExclude: [
+        'biome.json',
+        'eslint.config.js',
+        '.prettierrc',
+        'lefthook.yml',
+        '.husky/pre-commit',
+      ],
+    },
+    {
+      name: 'JS+none+none',
+      input: { language: 'javascript', linter: 'none', preCommit: 'none' },
+      shouldInclude: [],
+      shouldExclude: [
+        'tsconfig.json',
+        'biome.json',
+        'eslint.config.js',
+        '.prettierrc',
+        'lefthook.yml',
+        '.husky/pre-commit',
+      ],
+    },
+  ];
+
+  for (const combo of combinations) {
+    it(`should scaffold ${combo.name} with correct files`, () => {
+      scaffold(createValidInput(combo.input));
+      const writtenPaths = (deps.fs.writeFile as ReturnType<typeof vi.fn>).mock.calls.map(
+        (call: [string]) => call[0],
+      );
+
+      for (const include of combo.shouldInclude) {
+        expect(writtenPaths).toContain(`my-test-app/${include}`);
+      }
+      for (const exclude of combo.shouldExclude) {
+        expect(writtenPaths).not.toContain(`my-test-app/${exclude}`);
+      }
+    });
+  }
 });

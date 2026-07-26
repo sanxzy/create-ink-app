@@ -1,0 +1,13 @@
+import React from 'react';
+import { Text, Box } from 'ink';
+
+const App = ({ name = '<% PROJECT_NAME %>' }) => (
+  <Box flexDirection="column" padding={1}>
+    <Text bold color="green">
+      Hello from {name}!
+    </Text>
+    <Text color="gray">An Ink + React CLI application.</Text>
+  </Box>
+);
+
+export default App;
