@@ -117,10 +117,20 @@ const buildConfigEntries = (input: ScaffoldInput): ConfigEntry[] => {
 /** Get template files for a given language */
 const getTemplateFiles = (language: string): string[] => {
   if (language === 'javascript') {
-    return ['src/app.jsx.template', 'src/cli.jsx.template', 'test.jsx.template'];
+    return [
+      'src/app.jsx.template',
+      'src/cli.jsx.template',
+      'src/app.test.jsx.template',
+      'src/cli.test.jsx.template',
+    ];
   }
   // TypeScript (default)
-  return ['src/app.tsx.template', 'src/cli.tsx.template', 'test.tsx.template'];
+  return [
+    'src/app.tsx.template',
+    'src/cli.tsx.template',
+    'src/app.test.tsx.template',
+    'src/cli.test.tsx.template',
+  ];
 };
 
 /** Get the template subdirectory for a given runtime and language. Validates against known values to prevent path traversal. */

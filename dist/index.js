@@ -582,9 +582,19 @@ var buildConfigEntries = (input) => {
 };
 var getTemplateFiles = (language) => {
   if (language === "javascript") {
-    return ["src/app.jsx.template", "src/cli.jsx.template", "test.jsx.template"];
+    return [
+      "src/app.jsx.template",
+      "src/cli.jsx.template",
+      "src/app.test.jsx.template",
+      "src/cli.test.jsx.template"
+    ];
   }
-  return ["src/app.tsx.template", "src/cli.tsx.template", "test.tsx.template"];
+  return [
+    "src/app.tsx.template",
+    "src/cli.tsx.template",
+    "src/app.test.tsx.template",
+    "src/cli.test.tsx.template"
+  ];
 };
 var getTemplateDir = (runtime, language) => {
   const VALID_RUNTIMES = ["node", "bun"];
@@ -10322,7 +10332,7 @@ var runCreateApp = async (scaffoldProject, options) => {
 // package.json
 var package_default = {
   name: "@xzy-ai/create-ink-app",
-  version: "0.1.6",
+  version: "0.1.7",
   description: "Scaffold a complete, runnable Ink React project",
   type: "module",
   bin: {

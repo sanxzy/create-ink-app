@@ -1,0 +1,19 @@
+import React from 'react';
+import { describe, it, expect } from 'vitest';
+import { render } from 'ink';
+import App from './app.js';
+
+describe('CLI', () => {
+  it('should render the app entrypoint', () => {
+    const { lastFrame } = render(<App />);
+    const frame = lastFrame();
+    expect(frame).toBeDefined();
+    expect(frame).toContain('<% PROJECT_NAME %>');
+  });
+
+  it('should accept custom name', () => {
+    const { lastFrame } = render(<App name="cli-test" />);
+    const frame = lastFrame();
+    expect(frame).toContain('cli-test');
+  });
+});

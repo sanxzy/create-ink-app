@@ -66,7 +66,7 @@ describe('TemplateEngine', () => {
     });
 
     it('should handle multiple dots', () => {
-      expect(engine.getOutputFilename('test.tsx.template')).toBe('test.tsx');
+      expect(engine.getOutputFilename('src/app.test.tsx.template')).toBe('src/app.test.tsx');
     });
   });
 });

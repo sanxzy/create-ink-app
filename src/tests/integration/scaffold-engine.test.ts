@@ -116,7 +116,8 @@ describe('Scaffold Engine Integration', () => {
       'vitest.config.ts',
       'src/app.tsx',
       'src/cli.tsx',
-      'test.tsx',
+      'src/app.test.tsx',
+      'src/cli.test.tsx',
     ];
 
     for (const file of expectedFiles) {
@@ -384,7 +385,8 @@ describe('Scaffold Engine Integration', () => {
     // JS project should have .jsx files
     expect(pathExists(path.join(tempDir, 'js-project', 'src', 'app.jsx'))).toBe(true);
     expect(pathExists(path.join(tempDir, 'js-project', 'src', 'cli.jsx'))).toBe(true);
-    expect(pathExists(path.join(tempDir, 'js-project', 'test.jsx'))).toBe(true);
+    expect(pathExists(path.join(tempDir, 'js-project', 'src', 'app.test.jsx'))).toBe(true);
+    expect(pathExists(path.join(tempDir, 'js-project', 'src', 'cli.test.jsx'))).toBe(true);
   });
 
   it('should not create tsconfig.json for JavaScript scaffold', () => {
@@ -639,7 +641,7 @@ describe('Scaffold Engine Integration', () => {
 
   // === NEW: File count checks ===
 
-  it('should create 13 files for default TS+Biome+Lefthook', () => {
+  it('should create 14 files for default TS+Biome+Lefthook', () => {
     const result = scaffoldProject({
       projectName: 'count-test',
       runtime: 'node',
@@ -655,11 +657,11 @@ describe('Scaffold Engine Integration', () => {
 
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.value.files).toHaveLength(13);
+      expect(result.value.files).toHaveLength(14);
     }
   });
 
-  it('should create 13 files for JS+ESLint+Husky', () => {
+  it('should create 14 files for JS+ESLint+Husky', () => {
     const result = scaffoldProject({
       projectName: 'count-test-2',
       runtime: 'node',
@@ -675,7 +677,7 @@ describe('Scaffold Engine Integration', () => {
 
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.value.files).toHaveLength(13);
+      expect(result.value.files).toHaveLength(14);
     }
   });
 

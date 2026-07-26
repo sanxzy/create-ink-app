@@ -167,7 +167,8 @@ describe('Edge Cases', () => {
         'tsconfig.json',
         'src/app.tsx',
         'src/cli.tsx',
-        'test.tsx',
+        'src/app.test.tsx',
+        'src/cli.test.tsx',
       ];
 
       for (const file of expectedFiles) {

@@ -139,7 +139,8 @@ describe('E2E Matrix — all 8 scaffold combinations', () => {
         const ext = combo.language === 'typescript' ? 'tsx' : 'jsx';
         expect(fs.existsSync(path.join(tempDir, 'test-app', `src/app.${ext}`))).toBe(true);
         expect(fs.existsSync(path.join(tempDir, 'test-app', `src/cli.${ext}`))).toBe(true);
-        expect(fs.existsSync(path.join(tempDir, 'test-app', `test.${ext}`))).toBe(true);
+        expect(fs.existsSync(path.join(tempDir, 'test-app', `src/app.test.${ext}`))).toBe(true);
+        expect(fs.existsSync(path.join(tempDir, 'test-app', `src/cli.test.${ext}`))).toBe(true);
       });
 
       it('should create tsconfig only for TypeScript', () => {
