@@ -19,9 +19,7 @@ import type { PackageManager } from '@/shared/types';
  * When `env` is explicitly provided, only its npm_config_user_agent is used.
  * When `env` is omitted, process.env.npm_config_user_agent is used.
  */
-export const detectPackageManager = (
-  env?: Record<string, string | undefined>,
-): PackageManager => {
+export const detectPackageManager = (env?: Record<string, string | undefined>): PackageManager => {
   const userAgent =
     env !== undefined
       ? (env.npm_config_user_agent ?? '')
